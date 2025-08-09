@@ -1,0 +1,7 @@
+{
+  "My Code",
+  "Akane Sasu",
+  "Freesia",
+  "Idol",
+  "Lead Control"
+}
