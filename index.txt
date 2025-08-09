@@ -5,5 +5,7 @@
   "Idol",
   "Lead Control",
   "Inori",
-  "Suki"
+  "Suki",
+  "Atashi ga Tonari ni Uchi",
+  "Hirahira Hirara"
 }
