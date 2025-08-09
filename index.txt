@@ -3,5 +3,7 @@
   "Akane Sasu",
   "Freesia",
   "Idol",
-  "Lead Control"
+  "Lead Control",
+  "Inori",
+  "Suki"
 }
