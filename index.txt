@@ -7,5 +7,9 @@
   "Inori",
   "Suki",
   "Atashi ga Tonari ni Uchi",
-  "Hirahira Hirara"
+  "Hirahira Hirara",
+  "Konohiroi Sorano Shitade",
+  "homura",
+  "Ai Uta",
+  "Kiseki" 
 }
