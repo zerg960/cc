@@ -11,5 +11,14 @@
   "Konohiroi Sorano Shitade",
   "homura",
   "Ai Uta",
-  "Kiseki" 
+  "Kiseki",
+  "Yumesekai",
+  "Damasarenaikarane",
+  "Hatsukoi",
+  "haruhayuku",
+  "After Rain",
+  "Rokutousei no Yoru",
+  "Ivy Ivy Ivy",
+  "Yako Ressha Nothing to Lose",
+  "End of All"
 }
