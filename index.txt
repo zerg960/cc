@@ -4,6 +4,7 @@
   "Freesia",
   "Idol",
   "Anone",
+  "Styx Helix",
   "Inori",
   "Suki",
   "Atashi ga Tonari ni Uchi",
