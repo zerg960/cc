@@ -21,5 +21,11 @@
   "Rokutousei no Yoru",
   "Ivy Ivy Ivy",
   "Yako Ressha Nothing to Lose",
-  "End of All"
+  "End of All",
+  "Song of Seventeen",
+  "Kawaikutegomen",
+  "Hibari",
+  "Loligami Requiem",
+  "Kioku",
+  "Sing My Pleasure" 
 }
