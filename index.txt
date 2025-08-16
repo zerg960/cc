@@ -3,7 +3,7 @@
   "Akane Sasu",
   "Freesia",
   "Idol",
-  "Lead Control",
+  "Anone",
   "Inori",
   "Suki",
   "Atashi ga Tonari ni Uchi",
