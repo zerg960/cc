@@ -28,5 +28,8 @@
   "Loligami Requiem",
   "Kioku",
   "Sing My Pleasure",
-  "Kokoroe"
+  "Kokoroe",
+  "Soreo Aito Yobunara",
+  "Everlasting Snow",
+  "Embrace the Seasons" 
 }
