@@ -27,5 +27,6 @@
   "Hibari",
   "Loligami Requiem",
   "Kioku",
-  "Sing My Pleasure" 
+  "Sing My Pleasure",
+  "Kokoroe"
 }
