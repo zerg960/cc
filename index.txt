@@ -31,5 +31,13 @@
   "Kokoroe",
   "Soreo Aito Yobunara",
   "Everlasting Snow",
-  "Embrace the Seasons" 
+  "Embrace the Seasons",
+  "Tracing that Dream",
+  "Into the night",
+  "Kaibutsu",
+  "Halzion",
+  "Haruka",
+  "Adventure",
+  "Love letter",
+  "Mou sukoshi dake"
 }
