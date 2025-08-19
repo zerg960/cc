@@ -39,5 +39,10 @@
   "Haruka",
   "Adventure",
   "Love letter",
-  "Mou sukoshi dake"
+  "Mou sukoshi dake",
+  "AM11_00",
+  "For Lonely",
+  "Believe in you",
+  "Door",
+  "SUN DANCE" 
 }
