@@ -47,5 +47,6 @@
   "SUN DANCE",
   "Galaxy Anthem",
   "Kowareta Sekai no Uta",
-  "Asa ga kuru"
+  "Asa ga kuru",
+  "Dear Bride"
 }
