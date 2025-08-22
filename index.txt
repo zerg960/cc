@@ -44,5 +44,8 @@
   "For Lonely",
   "Believe in you",
   "Door",
-  "SUN DANCE" 
+  "SUN DANCE",
+  "Galaxy Anthem",
+  "Kowareta Sekai no Uta",
+  "Asa ga kuru"
 }
