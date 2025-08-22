@@ -1,4 +1,4 @@
-function(http, textutils, peripheral, os)
+function(http, textutils, peripheral, os, pairs, require, parallel)
   local songs = {}
   
   for _, title in pairs(textutils.unserialize(http.get("https://raw.githubusercontent.com/zerg960/cc/refs/heads/main/index.txt").readAll())) do
