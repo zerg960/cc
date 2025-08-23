@@ -48,5 +48,9 @@
   "Galaxy Anthem",
   "Kowareta Sekai no Uta",
   "Asa ga kuru",
-  "Dear Bride"
+  "Dear Bride",
+  "Little love song",
+  "One Voice",
+  "Hana No Uta",
+  "kogoesouna Kisetsu Kara" 
 }
