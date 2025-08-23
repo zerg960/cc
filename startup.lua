@@ -35,9 +35,9 @@ function(require, repo)
     local currentSong = nil -- choose manually
     local playing = false
     local stopFlag = false
-    local shuffle = false
+    local shuffle = true
     local loopMode = 0 -- 0=Off,1=All,2=One
-    local volume = .5
+    local volume = .35
     local decoder = dfpwm.make_decoder()
     local currentPage = 1
     local width, height = term.getSize()
