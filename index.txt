@@ -52,5 +52,7 @@
   "Little love song",
   "One Voice",
   "Hana No Uta",
-  "kogoesouna Kisetsu Kara" 
+  "kogoesouna Kisetsu Kara",
+  "Reasons not to fall in love",
+  "Unyielding" 
 }
