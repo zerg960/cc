@@ -122,7 +122,7 @@ function(require, repo)
 
                     local pending = {}
                     
-                    for _, spk in ipairs(speakers) do
+                    for _, spk in pairs(speakers) do
                       if stopFlag then break end
                       if not spk.playAudio(buffer, volume) then
                         pending[peripheral.getName(spk)] = spk
