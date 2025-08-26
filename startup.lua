@@ -2,8 +2,8 @@ function(require, repo)
     -- CC: Tweaked DFPWM Playlist with Stop, Loop, Shuffle, and Adaptive Buttons (Clickable aligned)
     
     local dfpwm = require("cc.audio.dfpwm")
-    local speaker = peripheral.find("speaker")
-    if not speaker then error("No speaker attached") end
+    local speakers = { peripheral.find("speaker") }
+    if not peripheral.find("speaker") then error("No speaker(s) attached") end
     
     -- Terminal setup
     local mon = peripheral.find("monitor")
@@ -119,9 +119,22 @@ function(require, repo)
                     for j = 1, #buffer do
                       buffer[j] = buffer[j] * volume
                     end
-                    while not speaker.playAudio(buffer, volume) do
-                        local ev = {os.pullEvent("speaker_audio_empty")}
-                        if stopFlag then break end
+
+                    local pending = {}
+                    
+                    for _, spk in ipairs(speakers) do
+                      if stopFlag then break end
+                      if not spk.playAudio(buffer, volume) then
+                        pending[peripheral.getName(spk)] = spk
+                      end
+                    end
+                    
+                    while not stopFlag and next(pending) do
+                      local _, name = os.pullEvent("speaker_audio_empty")
+                      local spk = pending[name]
+                      if spk and spk.playAudio(buffer, volume) then
+                        pending[name] = nil
+                      end
                     end
                 end
     
