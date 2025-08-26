@@ -32,14 +32,14 @@ function(require, repo)
     end
     
     -- ===== Playback state =====
-    local currentSong = nil -- choose manually
-    local playing = false
+    local currentSong = settings.get("currentSong", nil) -- choose manually
+    local playing = settings.get("playing", false)
     local stopFlag = false
-    local shuffle = true
-    local loopMode = 0 -- 0=Off,1=All,2=One
+    local shuffle = settings.get("shuffle", true)
+    local loopMode = settings.get("loopMode", 0) -- 0=Off,1=All,2=One
     local volume = .35
     local decoder = dfpwm.make_decoder()
-    local currentPage = 1
+    local currentPage = settings.get("currentPage", 1)
     local width, height = term.getSize()
     local topRows = 2
     local bottomRows = 5 -- reserve bottom 5 lines
@@ -155,6 +155,9 @@ function(require, repo)
                         for i,s in ipairs(songs) do if s==currentSong then idx=i end end
                         if idx<#songs then currentSong = songs[idx+1] else currentSong = nil playing=false end
                     end
+                    settings.set("currentSong", currentSong)
+                    settings.set("playing", playing)
+                    settings.save()
                 end
                 drawUI()
             else
@@ -223,6 +226,13 @@ function(require, repo)
                         drawUI()
                     end
                 end
+
+                settings.set("currentPage", currentPage)
+                settings.set("loopMode", loopMode)
+                settings.set("shuffle", shuffle)
+                settings.set("currentSong", currentSong)
+                settings.set("playing", playing)
+                settings.save()
             end
         end
     end
