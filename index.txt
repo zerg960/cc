@@ -56,5 +56,15 @@
   "Reasons not to fall in love",
   "Unyielding",
   "Uikousen",
-  "Marigold"
+  "Marigold",
+  "When wishes bloom",
+  "Seventeen",
+  "Negai",
+  "Orange",
+  "Sign",
+  "Kaze Ni Fukarete",
+  "feel my soul",
+  "Believe",
+  "Life is Beautiful",
+  "Longing"
 }
