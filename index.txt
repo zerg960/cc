@@ -55,5 +55,6 @@
   "kogoesouna Kisetsu Kara",
   "Reasons not to fall in love",
   "Unyielding",
-  "Uikousen"
+  "Uikousen",
+  "Marigold"
 }
