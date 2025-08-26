@@ -32,7 +32,18 @@ function(require, repo)
     end
     
     -- ===== Playback state =====
-    local currentSong = settings.get("currentSong", nil) -- choose manually
+    local savedName = settings.get("currentSong", nil)
+    local currentSong = nil
+    
+    if savedName ~= nil then
+        for _, song in ipairs(songs) do
+            if song.name == savedName then
+                currentSong = song
+                break
+            end
+        end
+    end
+    
     local playing = settings.get("playing", false)
     local stopFlag = false
     local shuffle = settings.get("shuffle", true)
@@ -230,7 +241,7 @@ function(require, repo)
                 settings.set("currentPage", currentPage)
                 settings.set("loopMode", loopMode)
                 settings.set("shuffle", shuffle)
-                settings.set("currentSong", currentSong)
+                settings.set("currentSong", currentSong.name)
                 settings.set("playing", playing)
                 settings.save()
             end
