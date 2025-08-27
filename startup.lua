@@ -237,7 +237,7 @@ function(require, repo)
                 settings.set("currentPage", currentPage)
                 settings.set("loopMode", loopMode)
                 settings.set("shuffle", shuffle)
-                settings.set("currentSong", currentSong.name)
+                settings.set("currentSong", currentSong and currentSong.name)
                 settings.set("playing", playing)
                 settings.save()
             end
