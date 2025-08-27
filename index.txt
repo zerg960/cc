@@ -66,5 +66,7 @@
   "feel my soul",
   "Believe",
   "Life is Beautiful",
-  "Longing"
+  "Longing",
+  "Passcode 4854",
+  "remember" 
 }
