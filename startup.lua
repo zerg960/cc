@@ -127,10 +127,6 @@ function(require, repo)
                     if stopFlag then break end
                     local chunk = songData:sub(i, math.min(i+16*1024-1, dataLen))
                     local buffer = decoder(chunk)
-                    for j = 1, #buffer do
-                      buffer[j] = buffer[j] * volume
-                    end
-
                     local pending = {}
                     
                     for _, spk in pairs(speakers) do
