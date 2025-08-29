@@ -162,7 +162,7 @@ function(require, repo)
                         for i,s in ipairs(songs) do if s==currentSong then idx=i end end
                         if idx<#songs then currentSong = songs[idx+1] else currentSong = nil playing=false end
                     end
-                    settings.set("currentSong", currentSong.name)
+                    settings.set("currentSong", currentSong and currentSong.name)
                     settings.set("playing", playing)
                     settings.save()
                 end
