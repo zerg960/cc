@@ -68,5 +68,14 @@
   "Life is Beautiful",
   "Longing",
   "Passcode 4854",
-  "remember" 
+  "remember",
+  "Ambivalent",
+  "Itte",
+  "Yozora",
+  "Yakeochinai Tsubasa",
+  "Freesia 2",
+  "Land Mark",
+  "Hitchcock",
+  "Tada Kimi ni Hare",
+  "Why I gave up on music" 
 }
