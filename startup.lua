@@ -3,7 +3,7 @@ function(require, repo)
     
     local dfpwm = require("cc.audio.dfpwm")
     local speakers = { peripheral.find("speaker") }
-    if not peripheral.find("speaker") then error("No speaker(s) attached") end
+    if not peripheral.find("speaker") then error("No speaker(s) attached. If this is a pocket computer, combine it in the crafting grid.") end
     
     -- Terminal setup
     local mon = peripheral.find("monitor")
