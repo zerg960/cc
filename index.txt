@@ -79,7 +79,7 @@
   "Tada Kimi ni Hare",
   "Why I gave up on music",
   "Always",
-  "Kimigairunara"
+  "Kimigairunara",
   "Torisetsu",
-  "I remember" 
+  "I remember"
 }
