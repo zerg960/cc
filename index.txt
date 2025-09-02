@@ -82,5 +82,5 @@
   "Kimigairunara",
   "Torisetsu",
   "I remember",
-  "Flourite Eyes Song"
+  "Fluorite Eyes Song"
 }
