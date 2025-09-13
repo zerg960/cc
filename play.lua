@@ -6,19 +6,17 @@ function(require, mon, speakers, path)
 
     local dfpwm = require("cc.audio.dfpwm")
 
-    function http_get_big(url, chunk_size)
-        chunk_size = chunk_size or 10*1024*1024
+    function http_get(url, chunk_size)
         local r = http.get(url, {Range="bytes=0-0", ["Accept-Encoding"]="identity"}, true)
         local h = r.getResponseHeaders()
         local total = tonumber(r.getResponseHeaders()["Content-Range"]:match("/(%d+)$"))
-        local ct = h["Content-Type"]
         r.readAll()
         r.close()
 
         local parts, got = {}, 0
         while got < total do
             local first = got
-            local last = math.min(got + chunk_size - 1, total - 1)
+            local last = math.min(got + 10*1024*1024 - 1, total - 1)
             local rr = http.get(url, {Range=("bytes=%d-%d"):format(first, last), ["Accept-Encoding"]="identity"}, true)
             parts[#parts+1] = rr.readAll()    
             rr.close()
@@ -27,8 +25,6 @@ function(require, mon, speakers, path)
 
         local body = table.concat(parts)
         local pos, open = 1, true
-        local headers = {["Content-Length"]=tostring(#body)}
-        if ct then headers["Content-Type"]=ct end
         local t = {}
         function t.readAll()
             if not open then
@@ -78,23 +74,116 @@ function(require, mon, speakers, path)
             return withTrailing and line.."\n" or line
         end
 
-        function t.close()
-            open=false
-        end
-
-        function t.getResponseCode()
-            return 200
-        end
-
-        function t.getResponseHeaders()
-            return headers
-        end
+        function t.close() open=false end
 
         return t
     end
 
-    mon.setCursorBlink(false)  
-    local file = assert(http_get_big(path))
+    mon.setCursorBlink(false)
+
+    local src = assert(http_get(path))
+
+    function inflate_stream(src, kind, in_chunk, out_max)
+        local DEFLATE = require("deflate")
+        kind = kind or "raw" -- "raw" | "zlib" | "gzip"
+        in_chunk = in_chunk or 64*1024
+        out_max = out_max or 128*1024
+      
+        local buf, pos, open, done = "", 1, true, false
+      
+        local function in_fn()
+            local s = src.read(in_chunk)
+            if s == nil then return nil end
+            if type(s) == "number" then s = string.char(s) end
+            return s
+        end
+      
+        local co = coroutine.create(function()
+            local function out_fn(s)
+                buf = buf .. s
+                if #buf - pos + 1 >= out_max then coroutine.yield() end
+            end
+            if kind == "gzip" then
+                DEFLATE.gunzip{ input=in_fn, output=out_fn }
+            elseif kind == "zlib" then
+                DEFLATE.inflate_zlib{ input=in_fn, output=out_fn }
+            else
+                DEFLATE.inflate{ input=in_fn, output=out_fn }
+            end
+            done = true
+        end)
+      
+        local function fill()
+            if done then return end
+            local ok, err = coroutine.resume(co)
+            if not ok then error(err or "inflate error") end
+        end
+      
+        local function have() return #buf - pos + 1 end
+        local function compact()
+            if pos > 4096 and pos > #buf/2 then buf = buf:sub(pos); pos = 1 end
+        end
+      
+        local t = {}
+      
+        function t.read(n)
+            if not open then return nil end
+            if n == nil or n == 1 then
+                while have() < 1 do
+                    if done then open=false return nil end
+                    fill()
+                    if have() < 1 and done then open=false return nil end
+                end
+                local b = string.byte(buf, pos); pos = pos + 1; compact()
+                if have() == 0 and done then open=false end
+                return b
+            else
+                while have() == 0 do
+                    if done then open=false return nil end
+                    fill()
+                    if have() == 0 and done then open=false return nil end
+                end
+                local s = buf:sub(pos, pos + n - 1)
+                pos = pos + #s; compact()
+                if have() == 0 and done then open=false end
+                return s ~= "" and s or nil
+            end
+        end
+      
+        function t.readLine(withTrailing)
+            if not open then return nil end
+            local out = {}
+            while true do
+                local b = t.read(1)
+                if not b then break end
+                local c = string.char(b)
+                out[#out+1] = c
+                if c == "\n" then break end
+            end
+            if #out == 0 then return nil end
+            local s = table.concat(out)
+            if not withTrailing then
+                if s:sub(-1) == "\n" then s = s:sub(1,-2) end
+                if s:sub(-1) == "\r" then s = s:sub(1,-2) end
+            end
+            return s
+        end
+      
+        function t.readAll()
+            local parts = {}
+            while true do
+                local s = t.read(64*1024)
+                if not s then break end
+                parts[#parts+1] = s
+            end
+            return table.concat(parts)
+        end
+      
+        function t.close() open=false end
+        return t
+    end
+    
+    local file = inflate_stream(src, "gzip")
 
     if file.read(4) ~= "32VD" then
         file.close()
