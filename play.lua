@@ -1,5 +1,5 @@
 function(require, mon, speakers, path, sub, limit)
-    print("version 1.1.7")
+    print("version 1.1.8")
 
     function log2(n)
         local _, r = math.frexp(n)
@@ -241,7 +241,6 @@ function(require, mon, speakers, path, sub, limit)
     
     local width, height, fps, nstreams, flags = ("<HHBBH"):unpack(file.read(8))
     if nstreams ~= 1 then file.close() error("Separate files unsupported") end
-    if bit32.band(flags, 1) == 0 then file.close() error("unsupported compression method") end
     local _, nframes, ctype = ("<IIB"):unpack(file.read(9))
     if ctype ~= 0x0C then file.close() error("Stream type not supported") end
 
@@ -322,8 +321,57 @@ function(require, mon, speakers, path, sub, limit)
             end
             return retval
         end
+    elseif bit32.band(flags, 3) == 0 then
+        local isColor, col_cache_bg, col_cache_fg, col_ready
+        function init(c)
+            isColor, col_cache_bg, col_cache_fg, col_ready = c, nil, nil, false
+        end
+
+        function read(nsym)
+            if isColor then 
+                if not col_ready then
+                    local bg, fg = {}, {}
+                    for i = 1, nsym do
+                        local b  = file.read()
+                        bg[i] = bit32.rshift(b, 4)
+                        fg[i] = bit32.band(b, 0x0F)
+                    end
+                    col_cache_bg, col_cache_fg, col_ready = bg, fg, true
+                    return col_cache_bg
+                else
+                    col_ready = false
+                    return col_cache_fg
+                end
+            end
+
+            local out, buf, bits = {}, 0, 0
+            local function readByte()
+                local chunk = file.read(1)
+                if chunk == nil then return nil end
+                if type(chunk) == "number" then
+                    return chunk
+                else
+                    return string.byte(chunk)
+                end
+            end
+        
+            for i = 1, nsym do
+                while bits < 5 do
+                    local b = readByte()
+                    if not b then b = 0 end
+                    buf  = bit32.bor(bit32.lshift(buf, 8), bit32.band(b, 0xFF))
+                    bits = bits + 8
+                end
+            
+                local shift = bits - 5
+                out[i] = bit32.band(bit32.rshift(buf, shift), 0x1F)
+                buf  = bit32.band(buf, bit32.lshift(1, shift) - 1)
+                bits = shift
+            end
+            return out
+        end
     else
-        error("Unimplemented!")
+        error("Unimplemented compression method!")
     end
 
     local blitColors = {[0] = "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"}
@@ -366,14 +414,26 @@ function(require, mon, speakers, path, sub, limit)
     mon.clear()
     for _ = 1, nframes do
         local size, ftype = ("<IB"):unpack(file.read(5))
+
         if ftype == 0 then
             if os.epoch "utc" - lastyield > 3000 then sleep(0) lastyield = os.epoch "utc" end
             local dcstart = os.epoch "utc"
             init(false)
+
             local screen = read(width * height)
             init(true)
+
             local bg = read(width * height)
             local fg = read(width * height)
+
+            -- debug
+          --  print(textutils.serializeJSON(screen))
+           -- print(textutils.serializeJSON(bg))
+           -- print(textutils.serializeJSON(fg))
+          --  exit()
+
+
+
             local dctime = os.epoch "utc" - dcstart
             while os.epoch "utc" < start + vframe * 1000 / fps do end
             local texta, fga, bga = {}, {}, {}
