@@ -1,5 +1,5 @@
-function(require, mon, speakers, path)
-    print("version 1.0")
+function(require, mon, speakers, path, sub)
+    print("version 1.1.2")
 
     function log2(n)
         local _, r = math.frexp(n)
@@ -8,10 +8,36 @@ function(require, mon, speakers, path)
 
     local dfpwm = require("cc.audio.dfpwm")
 
+    function wrapText(text, width)
+        text = tostring(text or "")
+        local out, line = {}, ""
+      
+        local function flushLine()
+          if #line > 0 then table.insert(out, line) end
+          line = ""
+        end
+      
+        for para in (text .. "\n"):gmatch("([^\n]*)\n") do
+          for word in para:gmatch("%S+") do
+            if #line == 0 then
+              line = word
+            elseif #line + 1 + #word <= width then
+              line = line .. " " .. word
+            else
+              table.insert(out, line)
+              line = word
+            end
+          end
+          flushLine()
+        end
+      
+        return out
+      end
+
     function http_get(url, chunk_size)
         local r = http.get(url, {Range="bytes=0-0", ["Accept-Encoding"]="identity"}, true) or error("404")
         local h = r.getResponseHeaders()
-        local total = tonumber(r.getResponseHeaders()["Content-Range"]:match("/(%d+)$"))
+        local total = 10*1024*1024 -- tonumber(r.getResponseHeaders()["Content-Range"]:match("/(%d+)$"))
         r.readAll()
         r.close()
 
@@ -304,6 +330,40 @@ function(require, mon, speakers, path)
     local lastyield = start
     local vframe = 0
     local subs = {}
+
+    local subPath = string.gsub(path, ".dat", ".sub")
+    local subFileRaw = http.get(subPath)
+    if subFileRaw ~= nil then
+        local subIn = textutils.unserialize(subFileRaw.readAll())
+        
+        local function parse_time(t)
+            local h, m, s = t:match("^(%d+):(%d+):(%d+%.%d+)$")
+            if not h then error("Time format must be H:MM:SS.ff, got: "..t) end
+            return tonumber(h) * 3600 + tonumber(m) * 60 + tonumber(s)
+        end
+        
+        local function to_frame(sec)
+            return math.floor(sec * fps + 0.5)
+        end
+        
+        for _, s in ipairs(subIn) do
+            local startSec = parse_time(s.start)
+            local endSec   = parse_time(s["end"])
+        
+            local startF = to_frame(startSec)
+            local endF   = to_frame(endSec)
+            if endF <= startF then endF = startF + 1 end
+        
+            subs[#subs + 1] = {
+                frame  = startF,
+                length = endF - startF,
+                text   = tostring(s.text or "")
+            }
+
+            print(startF .. "/" .. endF - startF .. ": " .. s.text)
+        end
+    end  
+
     mon.clear()
     for _ = 1, nframes do
         local size, ftype = ("<IB"):unpack(file.read(5))
@@ -345,10 +405,16 @@ function(require, mon, speakers, path)
             for i, v in ipairs(subs) do
                 if vframe <= v.frame + v.length then
                     local w, h = mon.getSize()
-                    mon.setCursorPos(1, h)
-                    mon.setBackgroundColor(colors.black)
-                    mon.setTextColor(colors.white)
-                    mon.write(v.text)
+                    local lines = wrapText(v.text, w)
+                  
+                    sub.setBackgroundColor(colors.black)
+                    sub.setTextColor(colors.white)
+                    sub.clear()
+                  
+                    for i = 1, math.min(#lines, h) do
+                        sub.setCursorPos(1, i)
+                        sub.write(lines[i])
+                    end
                 else delete[#delete+1] = i end
             end
             for i, v in ipairs(delete) do
