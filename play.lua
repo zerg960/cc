@@ -1,5 +1,5 @@
 function(require, mon, speakers, path, sub)
-    print("version 1.1.4")
+    print("version 1.1.5")
 
     function log2(n)
         local _, r = math.frexp(n)
@@ -413,7 +413,9 @@ function(require, mon, speakers, path, sub)
                         sub.setCursorPos(1, i)
                         sub.write(lines[i])
                     end
-                else delete[#delete+1] = i end
+                elseif vframe > v.frame + v.length then
+                    delete[#delete+1] = i
+                end
             end
             for i, v in ipairs(delete) do
                 table.remove(subs, v - i + 1)
