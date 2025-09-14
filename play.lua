@@ -83,6 +83,10 @@ function(require, mon, speakers, path)
 
     local src = assert(http_get(path))
 
+    function string.ends_with(str, suffix)
+        return suffix == "" or str:sub(-#suffix) == suffix
+    end
+
     function inflate_stream(src, kind, in_chunk, out_max)
         local DEFLATE = require("deflate")
         kind = kind or "raw" -- "raw" | "zlib" | "gzip"
@@ -193,7 +197,12 @@ function(require, mon, speakers, path)
         return t
     end
     
-    local file = inflate_stream(src, "gzip")
+    local file
+    if string.ends_with(path, ".bin") then
+        file = src
+    else
+        file = inflate_stream(src, "gzip")
+    end
 
     local magic = file.read(4)
     if magic ~= "32VD" then
