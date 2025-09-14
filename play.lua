@@ -1,5 +1,5 @@
-function(require, mon, speakers, path, sub)
-    print("version 1.1.6")
+function(require, mon, speakers, path, sub, limit)
+    print("version 1.1.7")
 
     function log2(n)
         local _, r = math.frexp(n)
@@ -38,6 +38,7 @@ function(require, mon, speakers, path, sub)
         local r = http.get(url, {Range="bytes=0-0", ["Accept-Encoding"]="identity"}, true) or error("404")
         local h = r.getResponseHeaders()
         local total = tonumber(r.getResponseHeaders()["Content-Range"]:match("/(%d+)$"))
+        total = math.min(limit or 50 * 1024 * 1024, total)
         r.readAll()
         r.close()
 
