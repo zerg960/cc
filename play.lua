@@ -1,5 +1,5 @@
 function(require, mon, speakers, path, sub)
-    print("version 1.1.2")
+    print("version 1.1.3")
 
     function log2(n)
         local _, r = math.frexp(n)
@@ -360,7 +360,7 @@ function(require, mon, speakers, path, sub)
                 text   = tostring(s.text or "")
             }
 
-            print(startF .. "/" .. endF - startF .. ": " .. s.text)
+            print(startSec .. "(" .. startF .. ")/" .. endF - startF .. ": " .. s.text)
         end
     end  
 
