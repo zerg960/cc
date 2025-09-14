@@ -344,8 +344,8 @@ function(require, mon, speakers, path)
                 if vframe <= v.frame + v.length then
                     local w, h = mon.getSize()
                     mon.setCursorPos(1, h)
-                    mon.setBackgroundColor(v.bgColor)
-                    mon.setTextColor(v.fgColor)
+                    mon.setBackgroundColor(colors.black)
+                    mon.setTextColor(colors.white)
                     mon.write(v.text)
                 else delete[#delete+1] = i end
             end
