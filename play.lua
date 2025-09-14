@@ -1,5 +1,5 @@
 function(require, mon, speakers, path, sub)
-    print("version 1.1.5")
+    print("version 1.1.6")
 
     function log2(n)
         local _, r = math.frexp(n)
@@ -37,7 +37,7 @@ function(require, mon, speakers, path, sub)
     function http_get(url, chunk_size)
         local r = http.get(url, {Range="bytes=0-0", ["Accept-Encoding"]="identity"}, true) or error("404")
         local h = r.getResponseHeaders()
-        local total = 10*1024*1024 -- tonumber(r.getResponseHeaders()["Content-Range"]:match("/(%d+)$"))
+        local total = tonumber(r.getResponseHeaders()["Content-Range"]:match("/(%d+)$"))
         r.readAll()
         r.close()
 
@@ -402,7 +402,7 @@ function(require, mon, speakers, path, sub)
             local delete = {}
             for i, v in ipairs(subs) do
                 if vframe >= v.frame and vframe <= v.frame + v.length then
-                    local w, h = mon.getSize()
+                    local w, h = sub.getSize()
                     local lines = wrapText(v.text, w)
                   
                     sub.setBackgroundColor(colors.black)
