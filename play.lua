@@ -1,4 +1,6 @@
 function(require, mon, speakers, path)
+    print("version 1.0")
+
     function log2(n)
         local _, r = math.frexp(n)
         return r - 1
