@@ -1,5 +1,5 @@
 function(require, mon, speakers, path, sub)
-    print("version 1.1.3")
+    print("version 1.1.4")
 
     function log2(n)
         local _, r = math.frexp(n)
@@ -359,8 +359,6 @@ function(require, mon, speakers, path, sub)
                 length = endF - startF,
                 text   = tostring(s.text or "")
             }
-
-            print(startSec .. "(" .. startF .. ")/" .. endF - startF .. ": " .. s.text)
         end
     end  
 
@@ -403,7 +401,7 @@ function(require, mon, speakers, path, sub)
             end
             local delete = {}
             for i, v in ipairs(subs) do
-                if vframe <= v.frame + v.length then
+                if vframe >= v.frame and vframe <= v.frame + v.length then
                     local w, h = mon.getSize()
                     local lines = wrapText(v.text, w)
                   

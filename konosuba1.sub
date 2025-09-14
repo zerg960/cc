@@ -349,12 +349,4 @@
   { start = "0:24:33.12", ["end"] = "0:24:39.17", text = "With it the clouds, from them the rain poured forth" },
   { start = "0:24:39.17", ["end"] = "0:24:45.14", text = "The spring isn't e'en a stone's throw away" },
   { start = "0:24:45.14", ["end"] = "0:24:51.56", text = "But, oh, the sheets, I've yet tae take them in today" },
-  { start = "0:25:02.07", ["end"] = "0:25:12.08", text = "Episode 2" },
-  { start = "0:25:02.07", ["end"] = "0:25:12.08", text = "An Explosion on This Fantasitis Case!" },
-  { start = "0:25:02.07", ["end"] = "0:25:12.08", text = "Mom, I've arrived in a parallel world." },
-  { start = "0:25:02.07", ["end"] = "0:25:12.08", text = "I feel refreshed, almost like I've been reborn." },
-  { start = "0:25:02.07", ["end"] = "0:25:12.08", text = "I've found a home and a job, and I'm ready to live my new life." },
-  { start = "0:25:02.07", ["end"] = "0:25:12.08", text = "Please don't worry about me." },
-  { start = "0:25:02.07", ["end"] = "0:25:12.08", text = "I've got a goddess with me." },
-  { start = "0:25:02.07", ["end"] = "0:25:12.08", text = "I'll be all right... I'll be all right... I hope." },
 }
