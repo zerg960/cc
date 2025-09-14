@@ -37,17 +37,17 @@ function(require, mon, speakers, path)
         function t.read(n)
             if not open then return nil end
             if n == nil or n == 1 then
-            if pos > #body then open=false return nil end
-            local b = string.byte(body, pos)
-            pos = pos + 1
-            if pos > #body then open=false end
-            return b
+                if pos > #body then open=false return nil end
+                local b = string.byte(body, pos)
+                pos = pos + 1
+                if pos > #body then open=false end
+                return b
             else
-            local s = body:sub(pos, pos + n - 1)
-            pos = pos + #s
-            if pos > #body then open=false end
-            if s == "" then return nil end
-            return s
+                local s = body:sub(pos, pos + n - 1)
+                pos = pos + #s
+                if pos > #body then open=false end
+                if s == "" then return nil end
+                return s
             end
         end
         
@@ -100,6 +100,7 @@ function(require, mon, speakers, path)
       
         local co = coroutine.create(function()
             local function out_fn(s)
+                if type(s) == "number" then s = string.char(s) end
                 buf = buf .. s
                 if #buf - pos + 1 >= out_max then coroutine.yield() end
             end
@@ -134,17 +135,26 @@ function(require, mon, speakers, path)
                     fill()
                     if have() < 1 and done then open=false return nil end
                 end
-                local b = string.byte(buf, pos); pos = pos + 1; compact()
+                local b = string.byte(buf, pos);
+                pos = pos + 1;
+                compact()
+                
                 if have() == 0 and done then open=false end
                 return b
             else
-                while have() == 0 do
-                    if done then open=false return nil end
-                    fill()
-                    if have() == 0 and done then open=false return nil end
+                local want = n
+                while have() < want do
+                  if done then
+                    if have() == 0 then open=false return nil end
+                    break
+                  end
+                  fill()
                 end
-                local s = buf:sub(pos, pos + n - 1)
-                pos = pos + #s; compact()
+              
+                local take = math.min(want, have())
+                local s = buf:sub(pos, pos + take - 1)
+                pos = pos + #s
+                compact()
                 if have() == 0 and done then open=false end
                 return s ~= "" and s or nil
             end
@@ -185,9 +195,10 @@ function(require, mon, speakers, path)
     
     local file = inflate_stream(src, "gzip")
 
-    if file.read(4) ~= "32VD" then
+    local magic = file.read(4)
+    if magic ~= "32VD" then
         file.close()
-        error("Invalid file")
+        error("Invalid magic header: " .. magic)
     end
     
     local width, height, fps, nstreams, flags = ("<HHBBH"):unpack(file.read(8))
