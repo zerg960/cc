@@ -7,7 +7,7 @@ function(require, mon, speakers, path)
     local dfpwm = require("cc.audio.dfpwm")
 
     function http_get(url, chunk_size)
-        local r = http.get(url, {Range="bytes=0-0", ["Accept-Encoding"]="identity"}, true)
+        local r = http.get(url, {Range="bytes=0-0", ["Accept-Encoding"]="identity"}, true) or error("404")
         local h = r.getResponseHeaders()
         local total = tonumber(r.getResponseHeaders()["Content-Range"]:match("/(%d+)$"))
         r.readAll()
@@ -335,14 +335,15 @@ function(require, mon, speakers, path)
             end
 
             for y = 1, height do
-                mon.setCursorBlink(false)
                 mon.setCursorPos(1, y)
+                mon.setCursorBlink(false)
                 mon.blit(texta[y], fga[y], bga[y])
             end
             local delete = {}
             for i, v in ipairs(subs) do
                 if vframe <= v.frame + v.length then
-                    mon.setCursorPos(v.x, v.y)
+                    local w, h = mon.getSize()
+                    mon.setCursorPos(1, h)
                     mon.setBackgroundColor(v.bgColor)
                     mon.setTextColor(v.fgColor)
                     mon.write(v.text)
