@@ -370,6 +370,7 @@ function(require, mon, speakers, path)
             sub.frame, sub.length, sub.x, sub.y, sub.color, sub.flags, sub.text = ("<IIHHBBs2"):unpack(data)
             sub.bgColor, sub.fgColor = 2^bit32.rshift(sub.color, 4), 2^bit32.band(sub.color, 15)
             subs[#subs+1] = sub
+            term.write(sub.x .. "/" .. sub.y .. " - " .. sub.text)
         elseif ftype >= 0x40 and ftype < 0x80 then
             if ftype == 64 then vframe = vframe + 1 end
             local mx, my = bit32.band(bit32.rshift(ftype, 3), 7) + 1, bit32.band(ftype, 7) + 1
