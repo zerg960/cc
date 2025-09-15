@@ -322,52 +322,61 @@ function(require, mon, speakers, path, sub, limit)
             return retval
         end
     elseif bit32.band(flags, 3) == 0 then
-        local isColor, col_cache_bg, col_cache_fg, col_ready
-        function init(c)
-            isColor, col_cache_bg, col_cache_fg, col_ready = c, nil, nil, false
+        local function readByte()
+            local chunk = file.read(1)
+            if chunk == nil then return nil end
+            if type(chunk) == "number" then return chunk else return string.byte(chunk) end
         end
 
+        local isColor, col_cache_bg, col_cache_fg, col_ready
+
+        function init(c)
+          isColor, col_cache_bg, col_cache_fg, col_ready = c, nil, nil, false
+        end
+      
         function read(nsym)
-            if isColor then 
+            if isColor then
                 if not col_ready then
                     local bg, fg = {}, {}
                     for i = 1, nsym do
-                        local b  = file.read()
+                        local b = readByte() or 0
                         bg[i] = bit32.rshift(b, 4)
                         fg[i] = bit32.band(b, 0x0F)
                     end
                     col_cache_bg, col_cache_fg, col_ready = bg, fg, true
+                    col_cache_bg[1], col_cache_fg[1] = col_cache_fg[1], col_cache_bg[1]
                     return col_cache_bg
                 else
                     col_ready = false
                     return col_cache_fg
                 end
             end
-
+        
             local out, buf, bits = {}, 0, 0
-            local function readByte()
-                local chunk = file.read(1)
-                if chunk == nil then return nil end
-                if type(chunk) == "number" then
-                    return chunk
-                else
-                    return string.byte(chunk)
-                end
+            local bytesRead = 0
+        
+            local function getByte()
+                local b = readByte() or 0
+                bytesRead = bytesRead + 1
+                return b
             end
         
             for i = 1, nsym do
                 while bits < 5 do
-                    local b = readByte()
-                    if not b then b = 0 end
+                    local b = getByte()
                     buf  = bit32.bor(bit32.lshift(buf, 8), bit32.band(b, 0xFF))
                     bits = bits + 8
                 end
-            
                 local shift = bits - 5
                 out[i] = bit32.band(bit32.rshift(buf, shift), 0x1F)
                 buf  = bit32.band(buf, bit32.lshift(1, shift) - 1)
                 bits = shift
             end
+        
+            local totalPacks  = math.ceil(nsym / 8)
+            local targetBytes = totalPacks * 5
+            local toSkip      = targetBytes - bytesRead
+            for _ = 1, toSkip do readByte() end
             return out
         end
     else
@@ -427,11 +436,23 @@ function(require, mon, speakers, path, sub, limit)
             local fg = read(width * height)
 
             -- debug
-          --  print(textutils.serializeJSON(screen))
-           -- print(textutils.serializeJSON(bg))
-           -- print(textutils.serializeJSON(fg))
-          --  exit()
+            -- 19,19,12,28,20] 19,19,12,28,20]
+            --print(textutils.serializeJSON(screen))
+            -- 15,5,5,5,5,5,5,15,..... 5,5,15,15,15... 381
+            -- 0, 5,5,5,5,5,5,5,...5,5,15,15... 379
+            --print(textutils.serializeJSON(screen))
+            --print(#screen)
+            --exit()
 
+            -- fg = all bytes in correct position and values, except first. bad array has 15, expected 5
+            -- bg = all bytes in correct position and values, except first. bad array has 5, expected 15
+            --print(string.gsub(textutils.serializeJSON(bg), "15,", "x"))
+            --print(#bg)
+            --print(textutils.serializeJSON(fg))
+            --exit()
+
+            -- 5,15,15,15,15,15,15,1,0's, 
+            -- 
 
 
             local dctime = os.epoch "utc" - dcstart
