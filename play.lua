@@ -1,5 +1,5 @@
 function(require, mon, speakers, path, sub, limit)
-    print("version 1.3.2")
+    print("version 1.4.0")
   
     local char, byte, concat = string.char, string.byte, table.concat
     local bor, band, lshift, rshift = bit32.bor, bit32.band, bit32.lshift, bit32.rshift
@@ -131,6 +131,14 @@ function(require, mon, speakers, path, sub, limit)
     if nstreams ~= 1 then file.close(); error("Separate files unsupported") end
     local _, nframes, ctype = ("<IIB"):unpack(file.read(9))
     if ctype ~= 0x0C then file.close(); error("Stream type not supported") end
+
+    if width == 61 or width == 71 or width == 82 then
+      mon.setTextScale(1)
+    elseif width == 121 or width == 143 or width == 164 then
+      mon.setTextScale(0.5)
+    elseif width == 30 or width == 36 or width == 41 then
+      mon.setTextScale(2)
+    end
   
     local vframe = 0
     local subs = {}
