@@ -351,6 +351,7 @@ function(require, repo)
         :initializeState("loop", 0, true) -- 0=Off,1=All,2=One
         :initializeState("offset", 0, true)
         :initializeState("current", "", true)
+        :initializeState("never", {}, true)
 
     -- Main screen
     local menuHeight = 1
@@ -375,9 +376,62 @@ function(require, repo)
         selectedBackground = colors.accent,
         selectedForeground = colors.accentfg
     }):bind("offset")
+    root:onStateChange("never", function(self, newValue)
+        for _, song in ipairs(songs) do
+            song.neverPlay = newValue[song.name]
+            song.foreground = song.neverPlay and colors.btnbg or nil
+            song.selectedForeground = song.neverPlay and colors.btnbg or nil
+        end
+    end):setState("never", root:getState("never"))
 
+    local contextMenu = main:addList({
+        visible = false,
+        background = colors.btnfg,
+        foreground = colors.btnbg
+    })
     songsList:onSelect(function(self, index, item)
-        root:setState("current", item.name)
+        if contextMenu.visible then
+            local selected = root:getState("current")
+            for _, song in ipairs(songs) do
+                song.selected = song.name == selected
+            end
+        else
+            root:setState("current", item.name)
+        end
+    end)
+    
+    root:onStateChange("offset", function()
+        contextMenu.visible = false
+    end)
+    root:onClick(function(self, button)
+        contextMenu.visible = false
+    end)
+    songsList:onClick(function(self, button, x, y)
+        if button ~= 2 then return end
+        
+        local _, index = self:getRelativePosition(x, y)
+        local adjustedIndex = index + self.offset
+        local song = songs[adjustedIndex]
+
+        contextMenu.visible = true
+        contextMenu.y = y
+        contextMenu.items = {
+            {
+                text = root:getState("never")[song.name] and " Include " or " Exclude ",
+                callback = function()
+                    local never = root:getState("never")
+                    if never[song.name] then
+                        never[song.name] = nil
+                    else
+                        never[song.name] = true
+                    end
+                    root:setState("never", never)
+                end
+            }
+        }
+        contextMenu.height = #contextMenu.items
+        contextMenu.width = 11
+        contextMenu.x = math.min(main.width - 11, x)
     end)
 
     local nowPlaying = buttons:addLabel({
@@ -559,54 +613,127 @@ function(require, repo)
     })
 
     init = true
+    
     local function playerLoop()
+        local function anyPlayable()
+            for _, s in ipairs(songs) do if not s.neverPlay then return true end end
+            return false
+        end
+
+        local function indexOf(name)
+            for i, s in ipairs(songs) do if s.name == name then return i end end
+            return nil
+        end
+
+        local function pickRandomPlayable()
+            local pool = {}
+            for _, s in ipairs(songs) do
+                if not s.neverPlay then pool[#pool+1] = s end
+            end
+            if #pool == 0 then return nil end
+            return pool[math.random(#pool)]
+        end
+
+        local function nextSequentialPlayable(fromIdx, wrap)
+            local n = #songs
+            if n == 0 then return nil end
+            local start = fromIdx or 0
+            local i = start
+            local steps = 0
+            while steps < n do
+                i = i + 1
+                if i > n then
+                    if not wrap then return nil end
+                    i = 1
+                end
+                if not songs[i].neverPlay then
+                    return songs[i], i
+                end
+                steps = steps + 1
+                if wrap and i == start then break end
+            end
+            return nil
+        end
+
+        local function advanceToNext()
+            if not anyPlayable() then
+                root:setState("current", "")
+                root:setState("playing", false)
+                return
+            end
+
+            local loopMode = root:getState("loop")
+            local doShuffle = root:getState("shuffle")
+            local curName = root:getState("current")
+            local curIdx = indexOf(curName) or 0
+
+            if doShuffle then
+                local s = pickRandomPlayable()
+                if s then root:setState("current", s.name); root:setState("playing", true) end
+                return
+            end
+
+            if loopMode == 1 then
+                local s = nextSequentialPlayable(curIdx, true)
+                if s then root:setState("current", s.name); root:setState("playing", true) end
+                return
+            elseif loopMode == 0 then
+                local s = nextSequentialPlayable(curIdx, false)
+                if s then
+                    root:setState("current", s.name)
+                    root:setState("playing", true)
+                else
+                    root:setState("current", "")
+                    root:setState("playing", false)
+                end
+                return
+            else
+                if curIdx ~= 0 and not songs[curIdx].neverPlay then
+                    return
+                else
+                    local s = nextSequentialPlayable(curIdx, true)
+                    if s then root:setState("current", s.name); root:setState("playing", true)
+                    else root:setState("current", ""); root:setState("playing", false) end
+                    return
+                end
+            end
+        end
+
         while true do
             local currentSong = songsList:getSelectedItem()
-            local decoder = dfpwm.make_decoder()
             if root:getState("current") ~= "" and root:getState("playing") then
-                local songData = currentSong.fn()
-                local dataLen = #songData
-                for i = 1, dataLen, 8*1024 do
-                    if stopFlag then break end
-                    local chunk = songData:sub(i, math.min(i+8*1024-1, dataLen))
-                    local buffer = decoder(chunk)
-                    local pending = {}
-                    
-                    for _, spk in pairs(speakers) do
-                        if stopFlag then break end
-                        if not spk.playAudio(buffer, volume:getValue() / 100) then
-                            pending[peripheral.getName(spk)] = spk
-                        end
-                    end
-                    
-                    while not stopFlag and next(pending) do
-                        local _, name = os.pullEvent("speaker_audio_empty")
-                        local spk = pending[name]
-                        if spk and spk.playAudio(buffer, volume:getValue() / 100) then
-                            pending[name] = nil
-                        end
-                    end
-                end
-    
-                if stopFlag then
-                    stopFlag = false
+                if currentSong.neverPlay then
+                    advanceToNext()
                 else
-                    if root:getState("loop") == 2 then
-                    elseif root:getState("shuffle") then
-                        root:setState("current", songs[math.random(#songs)].name)
-                    elseif root:getState("loop") == 1 then
-                        local idx = 1
-                        for i,s in ipairs(songs) do if s.name==root:getState("current") then idx=i end end
-                        root:setState("current", songs[idx % #songs + 1].name)
-                    else
-                        local idx = 1
-                        for i,s in ipairs(songs) do if s.name==root:getState("current") then idx=i end end
-                        if idx<#songs then
-                            root:setState("current", songs[idx+1].name)
-                        else
-                            root:setState("current", "")
-                            root:setState("playing", false)
+                    local decoder = dfpwm.make_decoder()
+                    local songData = currentSong.fn()
+                    local dataLen = #songData
+                    for i = 1, dataLen, 8*1024 do
+                        if stopFlag then break end
+                        local chunk = songData:sub(i, math.min(i+8*1024-1, dataLen))
+                        local buffer = decoder(chunk)
+                        local pending = {}
+    
+                        for _, spk in pairs(speakers) do
+                            if stopFlag then break end
+                            if not spk.playAudio(buffer, volume:getValue() / 100) then
+                                pending[peripheral.getName(spk)] = spk
+                            end
                         end
+    
+                        while not stopFlag and next(pending) do
+                            local _, name = os.pullEvent("speaker_audio_empty")
+                            local spk = pending[name]
+                            if spk and spk.playAudio(buffer, volume:getValue() / 100) then
+                                pending[name] = nil
+                            end
+                        end
+                    end
+    
+                    if stopFlag then
+                        stopFlag = false
+                    else
+                        advanceToNext()
                     end
                 end
             else
