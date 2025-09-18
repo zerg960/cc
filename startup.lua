@@ -602,7 +602,7 @@ function(require, repo)
         height = menuHeight,
         items = {
             {
-                text = "Main",
+                text = "Zerg's Music Player",
                 selected = true,
                 callback = function()
                     hideAll()
