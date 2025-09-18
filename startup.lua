@@ -343,6 +343,7 @@ function(require, repo)
 
     -- ===== Playback state =====
     local stopFlag = false
+    local init = false
 
     local root = ui.getMainFrame()
         :initializeState("playing", false, true)
@@ -397,7 +398,9 @@ function(require, repo)
         end
         
         stopFlag = true
-        root:setState("playing", true)
+        if init then
+            root:setState("playing", true)
+        end
         nowPlaying.text = newValue or "(None)"
     end):setState("current", root:getState("current"))
     :initializeState("volume", math.floor(root.width / 3) - 1, false)
@@ -555,6 +558,7 @@ function(require, repo)
         width = root.width,
     })
 
+    init = true
     local function playerLoop()
         while true do
             local currentSong = songsList:getSelectedItem()
