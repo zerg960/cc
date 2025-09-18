@@ -322,18 +322,23 @@ function(require, repo)
     term.clear()
 
     -- ===== Songs setup =====
-    local songIndexUrl = "https://raw.githubusercontent.com/" .. repo .. "/refs/heads/main/index.txt"
-    local songNames = textutils.unserialize(http.get(songIndexUrl).readAll())
+    function ends_with(str, suffix)
+        return suffix == "" or str:sub(-#suffix) == suffix
+    end
+
+    local songIndexUrl = "https://api.github.com/repos/" .. repo .. "/contents"
+    local songNames = textutils.unserializeJSON(http.get(songIndexUrl).readAll())
     local songs = {}
-    for i, name in ipairs(songNames) do
-        table.insert(songs, {
-            text = name,
-            name = name,
-            fn = function()
-                local url = "https://raw.githubusercontent.com/" .. repo .. "/refs/heads/main/" .. textutils.urlEncode(name):gsub("+", "%%20") .. ".dfpwm"
-                return http.get(url).readAll()
-            end
-        })
+    for i, file in ipairs(songNames) do
+        if ends_with(file.name, ".dfpwm") then
+            table.insert(songs, {
+                text = file.name:gsub(".dfpwm", ""),
+                name = file.name:gsub(".dfpwm", ""),
+                fn = function()
+                    return http.get(file.download_url).readAll()
+                end
+            })
+        end
     end
 
     -- ===== Playback state =====
