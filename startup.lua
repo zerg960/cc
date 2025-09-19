@@ -367,6 +367,21 @@ function(require, repo)
         height = 5,
         background = colors.bg
     })
+    local banQueueLabel = buttons:addLabel({
+        background = colors.bg,
+        foreground = colors.fg,
+    })
+
+    function updateBanQueueLabel()
+        local excludedCt = 0
+        for _, _ in pairs(root:getState("never")) do
+            excludedCt = excludedCt + 1
+        end
+        local text = "Exclude: " .. excludedCt
+        banQueueLabel.x = buttons.width - #text
+        banQueueLabel.text = text
+    end
+
     local songsList = main:addList({
         items = songs,
         width = main.width - 1,
@@ -382,6 +397,7 @@ function(require, repo)
             song.foreground = song.neverPlay and colors.btnbg or nil
             song.selectedForeground = song.neverPlay and colors.btnbg or nil
         end
+        updateBanQueueLabel()
     end):setState("never", root:getState("never"))
 
     local contextMenu = main:addList({
@@ -540,7 +556,7 @@ function(require, repo)
         end
     end)
     root:onStateChange("playing", function(self, newValue)
-        playing.text = newValue and " Playing " or " Stopped "
+        playing.text = newValue and " Play " or " Stop "
         if not newValue then
            stopFlag = true
         end
@@ -571,6 +587,7 @@ function(require, repo)
         stopFlag = true
         root:setState("playing", true)
     end)
+    banQueueLabel.y = 2
 
     local volumeLabel = buttons:addLabel({
         y = 3, text = "Vol: 100%",
