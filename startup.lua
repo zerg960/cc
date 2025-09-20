@@ -287,6 +287,113 @@ function(require, repo)
         return
     end
 
+    -- compression stuff
+    local function save(name, url)
+        if fs.exists(name) then
+            return
+        end
+
+        local source = http.get(url).readAll()
+        local file = fs.open(name, "w")
+        file.write(source)
+        file.close()
+    end
+    save("deflate", "https://raw.githubusercontent.com/OpenPrograms/Magik6k-Programs/refs/heads/master/libdeflate/deflate.lua")
+    save("crc32", "https://raw.githubusercontent.com/OpenPrograms/Magik6k-Programs/refs/heads/master/libcrc32/crc32.lua")
+
+    local char, byte, concat = string.char, string.byte, table.concat
+    local min, max, floor = math.min, math.max, math.floor
+    local function inflate_stream(src, kind, in_chunk, out_max)
+        local DEFLATE = require("deflate")
+        kind = kind or "raw"; in_chunk = in_chunk or 64 * 1024; out_max = out_max or 128 * 1024
+        local buf, pos, open, done = "", 1, true, false
+        local function in_fn() local s = src.read(in_chunk); if s == nil then return nil end; if type(s) == "number" then s = char(s) end; return s end
+        local co = coroutine.create(function()
+          local function out_fn(s) if type(s) == "number" then s = char(s) end; buf = buf .. s; if #buf - pos + 1 >= out_max then coroutine.yield() end end
+          if kind == "gzip" then DEFLATE.gunzip{ input = in_fn, output = out_fn }
+          elseif kind == "zlib" then DEFLATE.inflate_zlib{ input = in_fn, output = out_fn }
+          else DEFLATE.inflate{ input = in_fn, output = out_fn } end
+          done = true
+        end)
+        local function fill() if done then return end; local ok, err = coroutine.resume(co); if not ok then error(err or "inflate error") end end
+        local function have() return #buf - pos + 1 end
+        local function compact() if pos > 4096 and pos > #buf / 2 then buf = buf:sub(pos); pos = 1 end end
+    
+        local t = {}
+        function t.read(n)
+          if not open then return nil end
+          if n == nil or n == 1 then
+            while have() < 1 do if done then open = false; return nil end; fill(); if have() < 1 and done then open = false; return nil end end
+            local b = byte(buf, pos); pos = pos + 1; compact(); if have() == 0 and done then open = false end; return b
+          else
+            local want = n
+            while have() < want do if done then if have() == 0 then open = false; return nil end; break end; fill() end
+            local take = min(want, have())
+            local s = buf:sub(pos, pos + take - 1); pos = pos + #s; compact(); if have() == 0 and done then open = false end
+            return s ~= "" and s or nil
+          end
+        end
+        function t.readLine(withTrailing)
+          if not open then return nil end
+          local out = {}
+          while true do local b = t.read(1); if not b then break end; local c = char(b); out[#out + 1] = c; if c == "\n" then break end end
+          if #out == 0 then return nil end
+          local s = concat(out)
+          if not withTrailing then if s:sub(-1) == "\n" then s = s:sub(1, -2) end; if s:sub(-1) == "\r" then s = s:sub(1, -2) end end
+          return s
+        end
+        function t.readAll() local parts = {}; while true do local s = t.read(64 * 1024); if not s then break end; parts[#parts + 1] = s end; return concat(parts) end
+        function t.close() open = false end
+        return t
+    end
+    local function http_get(url)
+      local r = http.get(url, { Range = "bytes=0-0", ["Accept-Encoding"] = "identity" }, true) or error("404")
+      local h = r.getResponseHeaders()
+      local total = tonumber(h["Content-Range"]:match("/(%d+)$"))
+      total = min(limit or 50 * 1024 * 1024, total)
+      r.readAll(); r.close()
+  
+      local parts, got = {}, 0
+      while got < total do
+        local first = got
+        local last = min(got + 10 * 1024 * 1024 - 1, total - 1)
+        local rr = http.get(url, { Range = ("bytes=%d-%d"):format(first, last), ["Accept-Encoding"] = "identity" }, true)
+        parts[#parts + 1] = rr.readAll(); rr.close()
+        got = last + 1
+      end
+  
+      local body = concat(parts)
+      local pos, open = 1, true
+      local t = {}
+      function t.readAll() if not open then return nil end; open = false; return body end
+      function t.read(n)
+        if not open then return nil end
+        if n == nil or n == 1 then
+          if pos > #body then open = false; return nil end
+          local b = byte(body, pos); pos = pos + 1; if pos > #body then open = false end; return b
+        else
+          local s = body:sub(pos, pos + n - 1)
+          pos = pos + #s; if pos > #body then open = false end
+          if s == "" then return nil end; return s
+        end
+      end
+      function t.readLine(withTrailing)
+        if not open then return nil end
+        local a, b = body:find("\n", pos, true)
+        if not a then
+          local s = body:sub(pos); pos = #body + 1; open = false
+          if s == "" then return nil end
+          return withTrailing and s .. "\n" or s
+        end
+        local line = body:sub(pos, a - 1); pos = b + 1
+        if line:sub(-1) == "\r" then line = line:sub(1, -2) end
+        return withTrailing and line .. "\n" or line
+      end
+      function t.close() open = false end
+      return t
+    end
+    --
+
     local dfpwm = require("cc.audio.dfpwm")
     local speakers = { peripheral.find("speaker") }
     if not peripheral.find("speaker") then error("No speaker(s) attached. Maybe this isn't a *noisy* pocket computer?") end
@@ -326,23 +433,180 @@ function(require, repo)
         return suffix == "" or str:sub(-#suffix) == suffix
     end
 
+    local stopFlag = false
+    local volume
+    local function dfpwm_player(songData)
+        local decoder = dfpwm.make_decoder()
+        local dataLen = #songData
+        for i = 1, dataLen, 8*1024 do
+            if stopFlag then break end
+            local chunk = songData:sub(i, math.min(i+8*1024-1, dataLen))
+            local buffer = decoder(chunk)
+            local pending = {}
+
+            for _, spk in pairs(speakers) do
+                if stopFlag then break end
+                if not spk.playAudio(buffer, volume:getValue() / 100) then
+                    pending[peripheral.getName(spk)] = spk
+                end
+            end
+
+            while not stopFlag and next(pending) do
+                local _, name = os.pullEvent("speaker_audio_empty")
+                local spk = pending[name]
+                if spk and spk.playAudio(buffer, volume:getValue() / 100) then
+                    pending[name] = nil
+                end
+            end
+        end
+    end
+    local function hqs_player(rawStream)
+        local READ_CHUNK = 128 * 1024
+        local PLAY_CHUNK = 64 * 1024
+        local PAUSE_SEC = 0.05
+    
+        local function wrap_s8(x) return ((x + 128) % 256) - 128 end
+        local function zz_inv(n)
+            local half = math.floor(n / 2)
+            return ((n % 2) == 0) and half or -(half + 1)
+        end
+    
+        local rle_waiting = false
+        local stage = 0
+        local s_im2, s_im1
+        local out = {}
+        local out_len = 0
+    
+        local function feed_pcm_s8(s)
+            out_len = out_len + 1
+            out[out_len] = s
+        end
+    
+        local function flush_play_chunks(final)
+            while (out_len >= PLAY_CHUNK) or (final and out_len > 0) do
+                local take = math.min(out_len, PLAY_CHUNK)
+                local chunk_tbl = {}
+                for i = 1, take do chunk_tbl[i] = out[i] end
+                if take < out_len then
+                    local new = {}
+                    local k = 0
+                    for i = take + 1, out_len do k = k + 1; new[k] = out[i] end
+                    out = new
+                    out_len = k
+                else
+                    out = {}
+                    out_len = 0
+                end
+                local pending = {}
+                for _, spk in pairs(speakers) do
+                    if stopFlag then break end
+                    if not spk.playAudio(chunk_tbl, volume:getValue() / 100) then
+                        pending[peripheral.getName(spk)] = spk
+                    end
+                end
+                while not stopFlag and next(pending) do
+                    local _, name = os.pullEvent("speaker_audio_empty")
+                    local spk = pending[name]
+                    if spk and spk.playAudio(chunk_tbl, volume:getValue() / 100) then
+                        pending[name] = nil
+                    end
+                end
+            end
+        end
+    
+        local function feed_t(t)
+            if stage == 0 then
+                s_im2 = wrap_s8(t)
+                feed_pcm_s8(s_im2)
+                stage = 1
+            elseif stage == 1 then
+                local s1 = wrap_s8(s_im2 + t)
+                feed_pcm_s8(s1)
+                s_im1 = s1
+                stage = 2
+            else
+                local prevDelta = wrap_s8(s_im1 - s_im2)
+                local newDelta = wrap_s8(prevDelta + t)
+                local s = wrap_s8(s_im1 + newDelta)
+                feed_pcm_s8(s)
+                s_im2, s_im1 = s_im1, s
+            end
+        end
+    
+        while not stopFlag do
+            local chunk = rawStream.read and rawStream.read(READ_CHUNK) or rawStream.readAll()
+            if not chunk or #chunk == 0 then break end
+            local pos, n = 1, #chunk
+            while pos <= n and not stopFlag do
+                local b = chunk:byte(pos); pos = pos + 1
+                if rle_waiting then
+                    local count = b
+                    for _ = 1, count do
+                        feed_t(0)
+                        if out_len >= PLAY_CHUNK then flush_play_chunks(false) end
+                        if stopFlag then break end
+                    end
+                    rle_waiting = false
+                else
+                    if b == 0 then
+                        rle_waiting = true
+                    else
+                        feed_t(zz_inv(b))
+                        if out_len >= PLAY_CHUNK then flush_play_chunks(false) end
+                    end
+                end
+            end
+            os.sleep(PAUSE_SEC)
+        end
+    
+        flush_play_chunks(true)
+        if rawStream.close then pcall(rawStream.close, rawStream) end
+    end
+   
+
     local songIndexUrl = "https://api.github.com/repos/" .. repo .. "/contents"
     local songNames = textutils.unserializeJSON(http.get(songIndexUrl).readAll())
-    local songs = {}
-    for i, file in ipairs(songNames) do
-        if ends_with(file.name, ".dfpwm") then
-            table.insert(songs, {
-                text = file.name:gsub(".dfpwm", ""),
-                name = file.name:gsub(".dfpwm", ""),
-                fn = function()
-                    return http.get(file.download_url).readAll()
+    local byBase = {}
+    
+    local function make_rec(base, url, is_hqs)
+        local buffer = nil
+        return {
+            text = base,
+            name = base,
+            play = function()
+                if is_hqs then
+                    local zstream = inflate_stream(http_get(url), "gzip")
+                    hqs_player(zstream)
+                else
+                    if buffer == nil then
+                        buffer = http.get(url).readAll()
+                    end
+                    dfpwm_player(buffer)
                 end
-            })
+            end
+        }
+    end
+
+    for _, file in ipairs(songNames) do
+        local name = file.name
+        local lname = name:lower()
+
+        if ends_with(lname, ".hqs") then
+            local base = name:gsub("%.hqs$", "")
+            byBase[base] = make_rec(base, file.download_url, true)
+        elseif ends_with(lname, ".dfpwm") then
+            local base = name:gsub("%.dfpwm$", "")
+            if not byBase[base] then
+                byBase[base] = make_rec(base, file.download_url, false)
+            end
         end
     end
 
+    local songs = {}
+    for _, rec in pairs(byBase) do table.insert(songs, rec) end
+    table.sort(songs, function(a, b) return a.text:lower() < b.text:lower() end)
+
     -- ===== Playback state =====
-    local stopFlag = false
     local init = false
 
     local root = ui.getMainFrame()
@@ -594,7 +858,7 @@ function(require, repo)
         background = colors.bg,
         foreground = colors.fg,
     })
-    local volume = buttons:addSlider({
+    volume = buttons:addSlider({
         y = 3, x = 1 + volumeLabel.width,
         width = buttons.width - volumeLabel.width,
         foreground = colors.btnfg,
@@ -722,30 +986,7 @@ function(require, repo)
                 if currentSong.neverPlay then
                     advanceToNext()
                 else
-                    local decoder = dfpwm.make_decoder()
-                    local songData = currentSong.fn()
-                    local dataLen = #songData
-                    for i = 1, dataLen, 8*1024 do
-                        if stopFlag then break end
-                        local chunk = songData:sub(i, math.min(i+8*1024-1, dataLen))
-                        local buffer = decoder(chunk)
-                        local pending = {}
-    
-                        for _, spk in pairs(speakers) do
-                            if stopFlag then break end
-                            if not spk.playAudio(buffer, volume:getValue() / 100) then
-                                pending[peripheral.getName(spk)] = spk
-                            end
-                        end
-    
-                        while not stopFlag and next(pending) do
-                            local _, name = os.pullEvent("speaker_audio_empty")
-                            local spk = pending[name]
-                            if spk and spk.playAudio(buffer, volume:getValue() / 100) then
-                                pending[name] = nil
-                            end
-                        end
-                    end
+                    currentSong.play()
     
                     if stopFlag then
                         stopFlag = false
