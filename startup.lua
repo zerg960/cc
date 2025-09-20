@@ -573,6 +573,7 @@ function(require, repo)
         return {
             text = base,
             name = base,
+            is_hqs = is_hqs,
             play = function()
                 if is_hqs then
                     local zstream = inflate_stream(http_get(url), "gzip")
@@ -725,6 +726,7 @@ function(require, repo)
             old.selected = false
         end
 
+        local text = newValue or "(None)"
         for i, song in ipairs(songs) do
             if song.name == newValue then
                 song.selected = true
@@ -735,7 +737,7 @@ function(require, repo)
         if init then
             root:setState("playing", true)
         end
-        nowPlaying.text = newValue or "(None)"
+        nowPlaying.text = text
     end):setState("current", root:getState("current"))
     :initializeState("volume", math.floor(root.width / 3) - 1, false)
 
@@ -943,6 +945,7 @@ function(require, repo)
                 return
             end
 
+            local currentSong = songsList:getSelectedItem()
             local loopMode = root:getState("loop")
             local doShuffle = root:getState("shuffle")
             local curName = root:getState("current")
@@ -969,7 +972,7 @@ function(require, repo)
                 end
                 return
             else
-                if curIdx ~= 0 and not songs[curIdx].neverPlay then
+                if currentSong ~= nil and not currentSong.neverPlay then
                     return
                 else
                     local s = nextSequentialPlayable(curIdx, true)
