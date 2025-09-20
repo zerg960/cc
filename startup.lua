@@ -951,13 +951,20 @@ function(require, repo)
             local curName = root:getState("current")
             local curIdx = indexOf(curName) or 0
 
-            if doShuffle then
+            if loopMode == 2 then
+                if currentSong ~= nil and not currentSong.neverPlay then
+                    return
+                else
+                    local s = nextSequentialPlayable(curIdx, true)
+                    if s then root:setState("current", s.name); root:setState("playing", true)
+                    else root:setState("current", ""); root:setState("playing", false) end
+                    return
+                end
+            elseif doShuffle then
                 local s = pickRandomPlayable()
                 if s then root:setState("current", s.name); root:setState("playing", true) end
                 return
-            end
-
-            if loopMode == 1 then
+            elseif loopMode == 1 then
                 local s = nextSequentialPlayable(curIdx, true)
                 if s then root:setState("current", s.name); root:setState("playing", true) end
                 return
@@ -971,15 +978,6 @@ function(require, repo)
                     root:setState("playing", false)
                 end
                 return
-            else
-                if currentSong ~= nil and not currentSong.neverPlay then
-                    return
-                else
-                    local s = nextSequentialPlayable(curIdx, true)
-                    if s then root:setState("current", s.name); root:setState("playing", true)
-                    else root:setState("current", ""); root:setState("playing", false) end
-                    return
-                end
             end
         end
 
