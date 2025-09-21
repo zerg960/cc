@@ -617,6 +617,7 @@ function(require, repo)
         :initializeState("offset", 0, true)
         :initializeState("current", "", true)
         :initializeState("never", {}, true)
+        :initializeState("queue", {}, true)
 
     -- Main screen
     local menuHeight = 1
@@ -642,7 +643,15 @@ function(require, repo)
         for _, _ in pairs(root:getState("never")) do
             excludedCt = excludedCt + 1
         end
-        local text = "Exclude: " .. excludedCt
+        
+        local queuedCt = #root:getState("queue")
+
+        local text
+        if queuedCt > 0 then
+            text = "Queued: " .. queuedCt
+        else
+            text = "Exclude: " .. excludedCt
+        end
         banQueueLabel.x = buttons.width - #text
         banQueueLabel.text = text
     end
@@ -664,6 +673,9 @@ function(require, repo)
         end
         updateBanQueueLabel()
     end):setState("never", root:getState("never"))
+    root:onStateChange("queue", function(self, newValue)
+        updateBanQueueLabel()
+    end):setState("queue", root:getState("queue"))
 
     local contextMenu = main:addList({
         visible = false,
@@ -698,6 +710,14 @@ function(require, repo)
         contextMenu.y = y
         contextMenu.items = {
             {
+                text = " Add to Queue ",
+                callback = function()
+                    local queue = root:getState("queue")
+                    queue[#queue + 1] = song.name
+                    root:setState("queue", queue)
+                end
+            },
+            {
                 text = root:getState("never")[song.name] and " Include " or " Exclude ",
                 callback = function()
                     local never = root:getState("never")
@@ -711,8 +731,8 @@ function(require, repo)
             }
         }
         contextMenu.height = #contextMenu.items
-        contextMenu.width = 11
-        contextMenu.x = math.min(main.width - 11, x)
+        contextMenu.width = 14
+        contextMenu.x = math.min(main.width - contextMenu.width, x)
     end)
 
     local nowPlaying = buttons:addLabel({
@@ -828,6 +848,95 @@ function(require, repo)
         end
     end):setState("playing", root:getState("playing"))
 
+    local function advanceToNext()
+        local function anyPlayable()
+            for _, s in ipairs(songs) do if not s.neverPlay then return true end end
+            return false
+        end
+    
+        local function indexOf(name)
+            for i, s in ipairs(songs) do if s.name == name then return i end end
+            return nil
+        end
+    
+        local function pickRandomPlayable()
+            local pool = {}
+            for _, s in ipairs(songs) do
+                if not s.neverPlay then pool[#pool+1] = s end
+            end
+            if #pool == 0 then return nil end
+            return pool[math.random(#pool)]
+        end
+    
+        local function nextSequentialPlayable(fromIdx, wrap)
+            local n = #songs
+            if n == 0 then return nil end
+            local start = fromIdx or 0
+            local i = start
+            local steps = 0
+            while steps < n do
+                i = i + 1
+                if i > n then
+                    if not wrap then return nil end
+                    i = 1
+                end
+                if not songs[i].neverPlay then
+                    return songs[i], i
+                end
+                steps = steps + 1
+                if wrap and i == start then break end
+            end
+            return nil
+        end
+
+        if not anyPlayable() then
+            root:setState("current", "")
+            root:setState("playing", false)
+            return
+        end
+
+        local currentSong = songsList:getSelectedItem()
+        local loopMode = root:getState("loop")
+        local doShuffle = root:getState("shuffle")
+        local curName = root:getState("current")
+        local curIdx = indexOf(curName) or 0
+        local queue = root:getState("queue")
+
+        if #queue > 0 then
+            local s = table.remove(queue, 1)
+            root:setState("current", s)
+            root:setState("playing", true)
+            root:setState("queue", queue)
+        elseif loopMode == 2 then
+            if currentSong ~= nil and not currentSong.neverPlay then
+                return
+            else
+                local s = nextSequentialPlayable(curIdx, true)
+                if s then root:setState("current", s.name); root:setState("playing", true)
+                else root:setState("current", ""); root:setState("playing", false) end
+                return
+            end
+        elseif doShuffle then
+            local s = pickRandomPlayable()
+            if s then root:setState("current", s.name); root:setState("playing", true) end
+            return
+        elseif loopMode == 1 then
+            local s = nextSequentialPlayable(curIdx, true)
+            if s then root:setState("current", s.name); root:setState("playing", true) end
+            return
+        elseif loopMode == 0 then
+            local s = nextSequentialPlayable(curIdx, false)
+            if s then
+                root:setState("current", s.name)
+                root:setState("playing", true)
+            else
+                root:setState("current", "")
+                root:setState("playing", false)
+            end
+            return
+        end
+    end
+
     buttons:addLabel({
         y = 2, x = 1 + playing.width + 1,
         text = " Skip ",
@@ -838,18 +947,8 @@ function(require, repo)
         if root:getState("current") == "" then
             return
         end
-
-        local idx = 1
-        for i,s in ipairs(songs) do if s.name==root:getState("current") then idx=i end end
-        if root:getState("shuffle") then
-            root:setState("current", songs[math.random(#songs)].name)
-        else
-            if idx < #songs then
-                root:setState("current", songs[idx+1].name)
-            else
-                root:setState("current", songs[1].name)
-            end
-        end
+        
+        advanceToNext()
         stopFlag = true
         root:setState("playing", true)
     end)
@@ -898,88 +997,6 @@ function(require, repo)
     init = true
     
     local function playerLoop()
-        local function anyPlayable()
-            for _, s in ipairs(songs) do if not s.neverPlay then return true end end
-            return false
-        end
-
-        local function indexOf(name)
-            for i, s in ipairs(songs) do if s.name == name then return i end end
-            return nil
-        end
-
-        local function pickRandomPlayable()
-            local pool = {}
-            for _, s in ipairs(songs) do
-                if not s.neverPlay then pool[#pool+1] = s end
-            end
-            if #pool == 0 then return nil end
-            return pool[math.random(#pool)]
-        end
-
-        local function nextSequentialPlayable(fromIdx, wrap)
-            local n = #songs
-            if n == 0 then return nil end
-            local start = fromIdx or 0
-            local i = start
-            local steps = 0
-            while steps < n do
-                i = i + 1
-                if i > n then
-                    if not wrap then return nil end
-                    i = 1
-                end
-                if not songs[i].neverPlay then
-                    return songs[i], i
-                end
-                steps = steps + 1
-                if wrap and i == start then break end
-            end
-            return nil
-        end
-
-        local function advanceToNext()
-            if not anyPlayable() then
-                root:setState("current", "")
-                root:setState("playing", false)
-                return
-            end
-
-            local currentSong = songsList:getSelectedItem()
-            local loopMode = root:getState("loop")
-            local doShuffle = root:getState("shuffle")
-            local curName = root:getState("current")
-            local curIdx = indexOf(curName) or 0
-
-            if loopMode == 2 then
-                if currentSong ~= nil and not currentSong.neverPlay then
-                    return
-                else
-                    local s = nextSequentialPlayable(curIdx, true)
-                    if s then root:setState("current", s.name); root:setState("playing", true)
-                    else root:setState("current", ""); root:setState("playing", false) end
-                    return
-                end
-            elseif doShuffle then
-                local s = pickRandomPlayable()
-                if s then root:setState("current", s.name); root:setState("playing", true) end
-                return
-            elseif loopMode == 1 then
-                local s = nextSequentialPlayable(curIdx, true)
-                if s then root:setState("current", s.name); root:setState("playing", true) end
-                return
-            elseif loopMode == 0 then
-                local s = nextSequentialPlayable(curIdx, false)
-                if s then
-                    root:setState("current", s.name)
-                    root:setState("playing", true)
-                else
-                    root:setState("current", "")
-                    root:setState("playing", false)
-                end
-                return
-            end
-        end
 
         while true do
             local currentSong = songsList:getSelectedItem()
