@@ -26,20 +26,35 @@ function(require, mon, speakers, path, sub, limit)
       end
       return out
     end
-  
+
     local function inflate_stream(src, kind, in_chunk, out_max)
         local DEFLATE = require("deflate")
 
-        kind = kind or "raw"; in_chunk = in_chunk or 64 * 1024; out_max = out_max or 128 * 1024
-        local buf, pos, open, done = "", 1, true, false
+        kind     = kind or "raw"
+        in_chunk = in_chunk or 64 * 1024
+        out_max  = out_max  or 512 * 1024  -- bigger to reduce yields/backpressure
 
-        -- batch small writes before touching `buf`
-        local pending, pend_len = {}, 0
-        local function flush_pending()
-            if pend_len > 0 then
-                buf = buf .. concat(pending)
-                pending, pend_len = {}, 0
-            end
+        local byte   = string.byte
+        local char   = string.char
+        local concat = table.concat
+        local min    = math.min
+
+        local open, done = true, false
+
+        -- Compact queue of produced chunks
+        local chunks = {}
+        local head_i, head_p, tail_i, avail = 1, 1, 0, 0
+
+        local function queue_empty_reset()
+            chunks = {}
+            head_i, tail_i, head_p, avail = 1, 0, 1, 0
+        end
+
+        local function push_chunk(s)
+            tail_i = tail_i + 1
+            chunks[tail_i] = s
+            avail = avail + #s
+            if tail_i == 1 then head_i, head_p = 1, 1 end
         end
 
         local function in_fn()
@@ -50,27 +65,80 @@ function(require, mon, speakers, path, sub, limit)
         end
 
         local co = coroutine.create(function()
-            local function out_fn(s)
-                if type(s) == "number" then s = char(s) end
-                pending[#pending + 1] = s
-                pend_len = pend_len + #s
+            -- Two-level coalescing:
+            -- 1) Gather numeric bytes in nbuf; periodically convert to string via string.char(unpack(...)) in safe slabs.
+            -- 2) Gather resulting strings in sbuf; flush to queue when big enough or before yielding.
+            local NBUF_SLICE     = 2048        -- how many numbers per char(...) call
+            local NBUF_FLUSH_AT  = 8192        -- flush numeric -> string when this many numbers accumulated
+            local SBUF_COALESCE  = 64 * 1024   -- coalesce strings to at least this size before push
+            local nbuf           = {}          -- numeric bytes (numbers 0..255)
+            local ncnt           = 0
+            local sbuf           = {}          -- string pieces
+            local sbuf_bytes     = 0
 
-                -- flush periodically or when close to yield threshold
-                if pend_len >= 8 * 1024 or (#buf - pos + 1) + pend_len >= out_max then
-                    flush_pending()
-                    if (#buf - pos + 1) >= out_max then coroutine.yield() end
+            local unpack = unpack or table.unpack
+
+            local function nbuf_to_strings()
+                if ncnt == 0 then return end
+                local i = 1
+                while i <= ncnt do
+                    local j = min(i + NBUF_SLICE - 1, ncnt)
+                    sbuf[#sbuf + 1] = char(unpack(nbuf, i, j))
+                    sbuf_bytes = sbuf_bytes + (j - i + 1)
+                    i = j + 1
+                end
+                nbuf, ncnt = {}, 0
+            end
+
+            local function sbuf_flush()
+                if sbuf_bytes > 0 then
+                    push_chunk(concat(sbuf))
+                    sbuf, sbuf_bytes = {}, 0
+                end
+            end
+
+            local function out_fn(x)
+                if type(x) == "number" then
+                    -- Collect numeric bytes cheaply.
+                    ncnt = ncnt + 1
+                    nbuf[ncnt] = x
+                    if ncnt >= NBUF_FLUSH_AT then
+                        nbuf_to_strings()
+                        if sbuf_bytes >= SBUF_COALESCE then
+                            sbuf_flush()
+                        end
+                    end
+                    -- Backpressure: consider both visible avail and pending buffers.
+                    if (avail + sbuf_bytes + ncnt) >= out_max then
+                        nbuf_to_strings(); sbuf_flush(); coroutine.yield()
+                    end
+                else
+                    -- String from emitter: flush numeric buffer first, then coalesce string.
+                    if ncnt > 0 then nbuf_to_strings() end
+                    if x ~= "" then
+                        sbuf[#sbuf + 1] = x
+                        sbuf_bytes = sbuf_bytes + #x
+                    end
+                    if sbuf_bytes >= SBUF_COALESCE then
+                        sbuf_flush()
+                    end
+                    if (avail + sbuf_bytes) >= out_max then
+                        sbuf_flush(); coroutine.yield()
+                    end
                 end
             end
 
             if kind == "gzip" then
-                DEFLATE.gunzip{ input = in_fn, output = out_fn }
+                DEFLATE.gunzip { input = in_fn, output = out_fn }
             elseif kind == "zlib" then
-                DEFLATE.inflate_zlib{ input = in_fn, output = out_fn }
+                DEFLATE.inflate_zlib { input = in_fn, output = out_fn }
             else
-                DEFLATE.inflate{ input = in_fn, output = out_fn }
+                DEFLATE.inflate { input = in_fn, output = out_fn }
             end
 
-            flush_pending()
+            -- Make pending data visible.
+            nbuf_to_strings()
+            sbuf_flush()
             done = true
         end)
 
@@ -80,12 +148,94 @@ function(require, mon, speakers, path, sub, limit)
             if not ok then error(err or "inflate error") end
         end
 
-        local function have() return #buf - pos + 1 end
-        local function compact()
-            if pos > 4096 and pos > #buf / 2 then
-                buf = buf:sub(pos); pos = 1
+        local function pop1()
+            local s = chunks[head_i]
+            local b = byte(s, head_p)
+            head_p = head_p + 1
+            avail  = avail - 1
+            if head_p > #s then
+                chunks[head_i] = nil
+                head_i = head_i + 1
+                head_p = 1
+                if head_i > tail_i then queue_empty_reset() end
             end
+            return b
         end
+
+        local function popn(n)
+            local s1 = chunks[head_i]
+            local len1 = #s1
+            local rem1 = len1 - head_p + 1
+
+            if n <= rem1 then
+                local out = s1:sub(head_p, head_p + n - 1)
+                head_p = head_p + n
+                avail  = avail - n
+                if head_p > len1 then
+                    chunks[head_i] = nil
+                    head_i = head_i + 1
+                    head_p = 1
+                    if head_i > tail_i then queue_empty_reset() end
+                end
+                return out
+            end
+
+            local want   = min(n, avail)
+            local take1  = rem1
+            local part1  = s1:sub(head_p)
+            chunks[head_i] = nil
+            head_i = head_i + 1
+            head_p = 1
+            avail  = avail - take1
+            local remain = want - take1
+            if remain == 0 then
+                if head_i > tail_i then queue_empty_reset() end
+                return part1
+            end
+
+            if head_i <= tail_i then
+                local s2 = chunks[head_i]
+                local len2 = #s2
+                if remain <= len2 then
+                    local out = part1 .. s2:sub(1, remain)
+                    if remain < len2 then
+                        head_p = remain + 1
+                        avail  = avail - remain
+                    else
+                        chunks[head_i] = nil
+                        head_i = head_i + 1
+                        head_p = 1
+                        avail  = avail - len2
+                        if head_i > tail_i then queue_empty_reset() end
+                    end
+                    return out
+                end
+            end
+
+            local out, oi = { part1 }, 2
+            while remain > 0 and head_i <= tail_i do
+                local s = chunks[head_i]
+                local sl = #s
+                if remain < sl then
+                    out[oi] = s:sub(1, remain)
+                    head_p  = remain + 1
+                    avail   = avail - remain
+                    remain  = 0
+                    break
+                else
+                    out[oi] = s
+                    chunks[head_i] = nil
+                    head_i = head_i + 1
+                    avail  = avail - sl
+                    remain = remain - sl
+                    oi = oi + 1
+                end
+            end
+            if head_i > tail_i then queue_empty_reset() end
+            return concat(out)
+        end
+
+        local function have() return avail end
 
         local t = {}
 
@@ -97,56 +247,78 @@ function(require, mon, speakers, path, sub, limit)
                     fill()
                     if have() < 1 and done then open = false; return nil end
                 end
-                local b = byte(buf, pos); pos = pos + 1
-                compact()
+                local b = pop1()
                 if have() == 0 and done then open = false end
                 return b
             else
                 local want = n
                 while have() < want do
-                    if done then
-                        if have() == 0 then open = false; return nil end
-                        break
-                    end
+                    if done then break end
                     fill()
                 end
-                local take = min(want, have())
-                local s = buf:sub(pos, pos + take - 1)
-                pos = pos + #s
-                compact()
+                if have() == 0 then open = false; return nil end
+                local s = popn(want)
+                if (s == nil or s == "") and done then open = false; return nil end
                 if have() == 0 and done then open = false end
-                return s ~= "" and s or nil
+                return s
             end
         end
 
         function t.readLine(withTrailing)
             if not open then return nil end
-            local out = {}
+            local out, oi = {}, 1
             while true do
-                local b = t.read(1); if not b then break end
-                local c = char(b); out[#out + 1] = c
-                if c == "\n" then break end
+                if avail == 0 then
+                    if done then break end
+                    fill()
+                    if avail == 0 and done then break end
+                    if avail == 0 then break end
+                end
+                local s = chunks[head_i]
+                local p = head_p
+                local nl = s:find("\n", p, true)
+                if nl then
+                    out[oi] = s:sub(p, nl); oi = oi + 1
+                    avail = avail - (nl - p + 1)
+                    head_p = nl + 1
+                    if head_p > #s then
+                        chunks[head_i] = nil
+                        head_i = head_i + 1
+                        head_p = 1
+                        if head_i > tail_i then queue_empty_reset() end
+                    end
+                    break
+                else
+                    out[oi] = s:sub(p); oi = oi + 1
+                    avail = avail - (#s - p + 1)
+                    chunks[head_i] = nil
+                    head_i = head_i + 1
+                    head_p = 1
+                    if head_i > tail_i then queue_empty_reset() end
+                end
             end
-            if #out == 0 then return nil end
-            local s = concat(out)
+            if oi == 1 then return nil end
+            local line = concat(out)
             if not withTrailing then
-                if s:sub(-1) == "\n" then s = s:sub(1, -2) end
-                if s:sub(-1) == "\r" then s = s:sub(1, -2) end
+                if line:sub(-1) == "\n" then line = line:sub(1, -2) end
+                if line:sub(-1) == "\r" then line = line:sub(1, -2) end
             end
-            return s
+            if have() == 0 and done then open = false end
+            return line
         end
 
         function t.readAll()
-            local parts = {}
+            local parts, pi = {}, 1
             while true do
                 local s = t.read(64 * 1024)
                 if not s then break end
-                parts[#parts + 1] = s
+                parts[pi] = s; pi = pi + 1
             end
             return concat(parts)
         end
 
         function t.close() open = false end
+
         return t
     end
     local function http_get(url)
@@ -200,9 +372,44 @@ function(require, mon, speakers, path, sub, limit)
       return suffix == "" or str:sub(-#suffix) == suffix
     end
   
+
+-- Simple Adler-32 over successive .read(1024) pulls.
+-- Returns checksum (number) and total bytes consumed.
+local function checksum_adler32(reader)
+    local byte = string.byte
+    local a, b = 1, 0
+    local MOD  = 65521
+    local total = 0
+
+    while true do
+        local s = reader.read(1024)
+        if not s then break end
+        if type(s) == "number" then
+            s = string.char(s)
+        end
+        for i = 1, #s do
+            a = (a + byte(s, i)) % MOD
+            b = (b + a) % MOD
+        end
+        total = total + #s
+    end
+
+    -- Combine (no bit ops required)
+    return b * 65536 + a, total
+end
+
+
+
     mon.setCursorBlink(false)
     local src = assert(http_get(path))
     local file = ends_with(path, ".bin") and src or inflate_stream(src, "gzip")
+
+
+    local start = os.epoch()
+    print("checksum: " .. checksum_adler32(file, "gzip"))
+    local stop = os.epoch()
+    print(stop - start)
+    error("perf done")
   
     local magic = file.read(4)
     if magic ~= "32VD" then file.close(); error("Invalid magic header: " .. tostring(magic)) end
