@@ -298,8 +298,7 @@ function(require, repo)
         file.write(source)
         file.close()
     end
-    save("deflate", "https://raw.githubusercontent.com/OpenPrograms/Magik6k-Programs/refs/heads/master/libdeflate/deflate.lua")
-    save("crc32", "https://raw.githubusercontent.com/OpenPrograms/Magik6k-Programs/refs/heads/master/libcrc32/crc32.lua")
+    save("deflate", "https://raw.githubusercontent.com/zerg960/cc/refs/heads/main/deflate.lua")
 
     local char, byte, concat = string.char, string.byte, table.concat
     local min, max, floor = math.min, math.max, math.floor

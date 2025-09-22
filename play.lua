@@ -27,6 +27,19 @@ function(require, mon, speakers, path, sub, limit)
       return out
     end
 
+    
+    local function save(name, url)
+        if fs.exists(name) then
+            return
+        end
+
+        local source = http.get(url).readAll()
+        local file = fs.open(name, "w")
+        file.write(source)
+        file.close()
+    end
+    save("deflate", "https://raw.githubusercontent.com/zerg960/cc/refs/heads/main/deflate.lua")
+
     local function inflate_stream(src, kind, in_chunk, out_max)
         local DEFLATE = require("deflate")
 
@@ -371,45 +384,10 @@ function(require, mon, speakers, path, sub, limit)
     local function ends_with(str, suffix)
       return suffix == "" or str:sub(-#suffix) == suffix
     end
-  
-
--- Simple Adler-32 over successive .read(1024) pulls.
--- Returns checksum (number) and total bytes consumed.
-local function checksum_adler32(reader)
-    local byte = string.byte
-    local a, b = 1, 0
-    local MOD  = 65521
-    local total = 0
-
-    while true do
-        local s = reader.read(1024)
-        if not s then break end
-        if type(s) == "number" then
-            s = string.char(s)
-        end
-        for i = 1, #s do
-            a = (a + byte(s, i)) % MOD
-            b = (b + a) % MOD
-        end
-        total = total + #s
-    end
-
-    -- Combine (no bit ops required)
-    return b * 65536 + a, total
-end
-
-
 
     mon.setCursorBlink(false)
     local src = assert(http_get(path))
     local file = ends_with(path, ".bin") and src or inflate_stream(src, "gzip")
-
-
-    local start = os.epoch()
-    print("checksum: " .. checksum_adler32(file, "gzip"))
-    local stop = os.epoch()
-    print(stop - start)
-    error("perf done")
   
     local magic = file.read(4)
     if magic ~= "32VD" then file.close(); error("Invalid magic header: " .. tostring(magic)) end
