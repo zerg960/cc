@@ -305,47 +305,127 @@ function(require, repo)
     local min, max, floor = math.min, math.max, math.floor
     local function inflate_stream(src, kind, in_chunk, out_max)
         local DEFLATE = require("deflate")
+
         kind = kind or "raw"; in_chunk = in_chunk or 64 * 1024; out_max = out_max or 128 * 1024
         local buf, pos, open, done = "", 1, true, false
-        local function in_fn() local s = src.read(in_chunk); if s == nil then return nil end; if type(s) == "number" then s = char(s) end; return s end
+
+        -- batch small writes before touching `buf`
+        local pending, pend_len = {}, 0
+        local function flush_pending()
+            if pend_len > 0 then
+                buf = buf .. concat(pending)
+                pending, pend_len = {}, 0
+            end
+        end
+
+        local function in_fn()
+            local s = src.read(in_chunk)
+            if s == nil then return nil end
+            if type(s) == "number" then s = char(s) end
+            return s
+        end
+
         local co = coroutine.create(function()
-          local function out_fn(s) if type(s) == "number" then s = char(s) end; buf = buf .. s; if #buf - pos + 1 >= out_max then coroutine.yield() end end
-          if kind == "gzip" then DEFLATE.gunzip{ input = in_fn, output = out_fn }
-          elseif kind == "zlib" then DEFLATE.inflate_zlib{ input = in_fn, output = out_fn }
-          else DEFLATE.inflate{ input = in_fn, output = out_fn } end
-          done = true
+            local function out_fn(s)
+                if type(s) == "number" then s = char(s) end
+                pending[#pending + 1] = s
+                pend_len = pend_len + #s
+
+                -- flush periodically or when close to yield threshold
+                if pend_len >= 8 * 1024 or (#buf - pos + 1) + pend_len >= out_max then
+                    flush_pending()
+                    if (#buf - pos + 1) >= out_max then coroutine.yield() end
+                end
+            end
+
+            if kind == "gzip" then
+                DEFLATE.gunzip{ input = in_fn, output = out_fn }
+            elseif kind == "zlib" then
+                DEFLATE.inflate_zlib{ input = in_fn, output = out_fn }
+            else
+                DEFLATE.inflate{ input = in_fn, output = out_fn }
+            end
+
+            flush_pending()
+            done = true
         end)
-        local function fill() if done then return end; local ok, err = coroutine.resume(co); if not ok then error(err or "inflate error") end end
+
+        local function fill()
+            if done then return end
+            local ok, err = coroutine.resume(co)
+            if not ok then error(err or "inflate error") end
+        end
+
         local function have() return #buf - pos + 1 end
-        local function compact() if pos > 4096 and pos > #buf / 2 then buf = buf:sub(pos); pos = 1 end end
-    
+        local function compact()
+            if pos > 4096 and pos > #buf / 2 then
+                buf = buf:sub(pos); pos = 1
+            end
+        end
+
         local t = {}
+
         function t.read(n)
-          if not open then return nil end
-          if n == nil or n == 1 then
-            while have() < 1 do if done then open = false; return nil end; fill(); if have() < 1 and done then open = false; return nil end end
-            local b = byte(buf, pos); pos = pos + 1; compact(); if have() == 0 and done then open = false end; return b
-          else
-            local want = n
-            while have() < want do if done then if have() == 0 then open = false; return nil end; break end; fill() end
-            local take = min(want, have())
-            local s = buf:sub(pos, pos + take - 1); pos = pos + #s; compact(); if have() == 0 and done then open = false end
-            return s ~= "" and s or nil
-          end
+            if not open then return nil end
+            if n == nil or n == 1 then
+                while have() < 1 do
+                    if done then open = false; return nil end
+                    fill()
+                    if have() < 1 and done then open = false; return nil end
+                end
+                local b = byte(buf, pos); pos = pos + 1
+                compact()
+                if have() == 0 and done then open = false end
+                return b
+            else
+                local want = n
+                while have() < want do
+                    if done then
+                        if have() == 0 then open = false; return nil end
+                        break
+                    end
+                    fill()
+                end
+                local take = min(want, have())
+                local s = buf:sub(pos, pos + take - 1)
+                pos = pos + #s
+                compact()
+                if have() == 0 and done then open = false end
+                return s ~= "" and s or nil
+            end
         end
+
         function t.readLine(withTrailing)
-          if not open then return nil end
-          local out = {}
-          while true do local b = t.read(1); if not b then break end; local c = char(b); out[#out + 1] = c; if c == "\n" then break end end
-          if #out == 0 then return nil end
-          local s = concat(out)
-          if not withTrailing then if s:sub(-1) == "\n" then s = s:sub(1, -2) end; if s:sub(-1) == "\r" then s = s:sub(1, -2) end end
-          return s
+            if not open then return nil end
+            local out = {}
+            while true do
+                local b = t.read(1); if not b then break end
+                local c = char(b); out[#out + 1] = c
+                if c == "\n" then break end
+            end
+            if #out == 0 then return nil end
+            local s = concat(out)
+            if not withTrailing then
+                if s:sub(-1) == "\n" then s = s:sub(1, -2) end
+                if s:sub(-1) == "\r" then s = s:sub(1, -2) end
+            end
+            return s
         end
-        function t.readAll() local parts = {}; while true do local s = t.read(64 * 1024); if not s then break end; parts[#parts + 1] = s end; return concat(parts) end
+
+        function t.readAll()
+            local parts = {}
+            while true do
+                local s = t.read(64 * 1024)
+                if not s then break end
+                parts[#parts + 1] = s
+            end
+            return concat(parts)
+        end
+
         function t.close() open = false end
         return t
     end
+
     local function http_get(url)
       local r = http.get(url, { Range = "bytes=0-0", ["Accept-Encoding"] = "identity" }, true) or error("404")
       local h = r.getResponseHeaders()
