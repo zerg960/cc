@@ -44,8 +44,8 @@ function(require, mon, speakers, path, sub, limit)
         local DEFLATE = require("deflate")
 
         kind     = kind or "raw"
-        in_chunk = in_chunk or 64 * 1024
-        out_max  = out_max  or 512 * 1024  -- bigger to reduce yields/backpressure
+        in_chunk = in_chunk or 32 * 1024
+        out_max  = out_max  or 64 * 1024  -- bigger to reduce yields/backpressure
 
         local byte   = string.byte
         local char   = string.char

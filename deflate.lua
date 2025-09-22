@@ -160,7 +160,7 @@ local function make_outstate(sink)
     local B = {}
     for i = 0, 255 do B[i] = string_char(i) end
 
-    local SBUF_COALESCE = 64 * 1024
+    local SBUF_COALESCE = 8 * 1024
     local sbuf, sbuf_bytes = {}, 0
     local is_file = (io.type(sink) == 'file')
 
