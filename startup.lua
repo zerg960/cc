@@ -289,6 +289,7 @@ function(require, repo)
 
     -- compression stuff
     local function save(name, url)
+        fs.delete(name)
         if fs.exists(name) then
             return
         end

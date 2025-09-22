@@ -29,6 +29,7 @@ function(require, mon, speakers, path, sub, limit)
 
     
     local function save(name, url)
+        fs.delete(name)
         if fs.exists(name) then
             return
         end
@@ -388,7 +389,7 @@ function(require, mon, speakers, path, sub, limit)
     mon.setCursorBlink(false)
     local src = assert(http_get(path))
     local file = ends_with(path, ".bin") and src or inflate_stream(src, "gzip")
-  
+ 
     local magic = file.read(4)
     if magic ~= "32VD" then file.close(); error("Invalid magic header: " .. tostring(magic)) end
     local width, height, fps, nstreams, flags = ("<HHBBH"):unpack(file.read(8))
