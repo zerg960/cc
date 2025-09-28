@@ -79,15 +79,12 @@ function(require, mon, speakers, path, sub, limit)
         end
 
         local co = coroutine.create(function()
-            -- Two-level coalescing:
-            -- 1) Gather numeric bytes in nbuf; periodically convert to string via string.char(unpack(...)) in safe slabs.
-            -- 2) Gather resulting strings in sbuf; flush to queue when big enough or before yielding.
-            local NBUF_SLICE     = 2048        -- how many numbers per char(...) call
-            local NBUF_FLUSH_AT  = 8192        -- flush numeric -> string when this many numbers accumulated
-            local SBUF_COALESCE  = 64 * 1024   -- coalesce strings to at least this size before push
-            local nbuf           = {}          -- numeric bytes (numbers 0..255)
+            local NBUF_SLICE     = 2048
+            local NBUF_FLUSH_AT  = 8192
+            local SBUF_COALESCE  = 64 * 1024
+            local nbuf           = {}
             local ncnt           = 0
-            local sbuf           = {}          -- string pieces
+            local sbuf           = {}
             local sbuf_bytes     = 0
 
             local unpack = unpack or table.unpack
@@ -113,7 +110,6 @@ function(require, mon, speakers, path, sub, limit)
 
             local function out_fn(x)
                 if type(x) == "number" then
-                    -- Collect numeric bytes cheaply.
                     ncnt = ncnt + 1
                     nbuf[ncnt] = x
                     if ncnt >= NBUF_FLUSH_AT then
@@ -122,12 +118,10 @@ function(require, mon, speakers, path, sub, limit)
                             sbuf_flush()
                         end
                     end
-                    -- Backpressure: consider both visible avail and pending buffers.
                     if (avail + sbuf_bytes + ncnt) >= out_max then
                         nbuf_to_strings(); sbuf_flush(); coroutine.yield()
                     end
                 else
-                    -- String from emitter: flush numeric buffer first, then coalesce string.
                     if ncnt > 0 then nbuf_to_strings() end
                     if x ~= "" then
                         sbuf[#sbuf + 1] = x
@@ -150,7 +144,6 @@ function(require, mon, speakers, path, sub, limit)
                 DEFLATE.inflate { input = in_fn, output = out_fn }
             end
 
-            -- Make pending data visible.
             nbuf_to_strings()
             sbuf_flush()
             done = true
@@ -612,7 +605,10 @@ function(require, mon, speakers, path, sub, limit)
             sub.setTextColor(colors.white)
             sub.clear()
             for j = 1, math.min(#lines, h) do sub.setCursorPos(1, j); sub.write(lines[j]) end
-          elseif vframe > v.frame + v.length then kill[#kill + 1] = i end
+          elseif vframe > v.frame + v.length then
+            kill[#kill + 1] = i
+            sub.clear()
+          end
         end
         for i2, v2 in ipairs(kill) do table.remove(subs, v2 - i2 + 1) end
   
