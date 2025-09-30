@@ -1,0 +1,16 @@
+{
+  { start = "00:00:00.00", ["end"] = "00:00:04.90", text = "AS YOU LIKE MY PLEASURE / AS YOU LIKE MY PLEASURE" },
+  { start = "00:00:16.01", ["end"] = "00:00:20.75", text = "Hikari wo mezashite umarete kita / I was born aiming for the light" },
+  { start = "00:00:20.75", ["end"] = "00:00:27.00", text = "Kizuna hosoi ito ni musubarete / Bound by a bond, a thin string" },
+  { start = "00:00:27.00", ["end"] = "00:00:31.70", text = "Shimei de mezameta koufuku kara / From the fortune of awakening for a mission" },
+  { start = "00:00:31.70", ["end"] = "00:00:39.61", text = "Tsumugu ikutsumono hokorashii kioku / Spinning many proud memories" },
+  { start = "00:00:39.61", ["end"] = "00:00:43.76", text = "Anata no tame ni kono sekai he / Into this world, for your sake" },
+  { start = "00:00:43.76", ["end"] = "00:00:51.13", text = "Kansha to uchuu ippai no hanataba wo / Gratitude and a bouquet filled with the universe" },
+  { start = "00:00:51.13", ["end"] = "00:00:57.11", text = "Shukumei sae unmei sae mo dozo kagayakasete / Destiny, even fate, please let them shine" },
+  { start = "00:00:57.11", ["end"] = "00:01:02.18", text = "Tanoshi ndari warau no wo mamoreru yorokobi / The joy of being able to protect those having fun and smiling" },
+  { start = "00:01:02.18", ["end"] = "00:01:05.68", text = "Akogareteru akogarete iru / I admire, I am admiring" },
+  { start = "00:01:05.68", ["end"] = "00:01:07.91", text = "Motto tsuyoku nareru / I can become stronger" },
+  { start = "00:01:07.91", ["end"] = "00:01:13.42", text = "Nakigoe sae uta no you ni kikasete agetai / I want even my crying voice to be heard like a song" },
+  { start = "00:01:13.42", ["end"] = "00:01:18.48", text = "Kono mekuru meku jikan ni / To these dazzling times" },
+  { start = "00:01:18.48", ["end"] = "00:01:27.50", text = "Namida made azukete hoshi / I'd like you to entrust tears too" }
+}
