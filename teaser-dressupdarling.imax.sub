@@ -1,0 +1,9 @@
+{
+  { start = "00:00:01.49", ["end"] = "00:00:06.20", text = "Cosplay, is to show your love for idols with all your strength!" },
+  { start = "00:00:06.20", ["end"] = "00:00:07.24", text = "Isn't it amazing?" },
+  { start = "00:00:07.24", ["end"] = "00:00:10.00", text = "That is simply the ultimate love!" },
+  { start = "00:00:39.69", ["end"] = "00:00:40.59", text = "Well?" },
+  { start = "00:00:40.59", ["end"] = "00:00:42.00", text = "Let's go, Gojou-kun!" },
+  { start = "00:01:00.99", ["end"] = "00:01:03.58", text = "\"Sequel Production Decided\"" },
+  { start = "00:01:06.55", ["end"] = "00:01:07.25", text = "See you~" }
+}
