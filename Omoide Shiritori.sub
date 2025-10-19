@@ -1,53 +1,62 @@
-{
-  { start = "00:00:04.78", ["end"] = "00:00:08.59", text = "Make a wish on a star, with as much love as possible Playing a word-chain game with my thoughts" },
-  { start = "00:00:09.82", ["end"] = "00:00:12.66", text = "Connect the words and make it into the answer" },
-  { start = "00:00:12.66", ["end"] = "00:00:26.43", text = "Now, the season is like a weighing scale" },
-  { start = "00:00:28.47", ["end"] = "00:00:33.78", text = "I chose a usual route to go home" },
-  { start = "00:00:33.78", ["end"] = "00:00:38.95", text = "Leave what I already know and look for something new" },
-  { start = "00:00:39.65", ["end"] = "00:00:45.72", text = "I am supposed to be happier today than yesterday" },
-  { start = "00:00:45.72", ["end"] = "00:00:47.83", text = "If I am not careful watching, I will forget it easily" },
-  { start = "00:00:47.83", ["end"] = "00:00:50.63", text = "How difficult and greedy" },
-  { start = "00:00:50.63", ["end"] = "00:00:56.50", text = "Sometimes I need warmth Sometimes I feel worried of searching blindly" },
-  { start = "00:00:56.50", ["end"] = "00:01:00.64", text = "What should I do? It's so difficult" },
-  { start = "00:01:00.64", ["end"] = "00:01:02.11", text = "ring ring you" },
-  { start = "00:01:07.25", ["end"] = "00:01:08.11", text = "\"I am glad\"" },
-  { start = "00:01:08.11", ["end"] = "00:01:09.48", text = "\"Thank you always\"" },
-  { start = "00:01:09.48", ["end"] = "00:01:10.75", text = "\"Please look at me properly\"" },
-  { start = "00:01:10.75", ["end"] = "00:01:11.82", text = "\"I want to hold your hand\"" },
-  { start = "00:01:13.09", ["end"] = "00:01:17.99", text = "Wherever you are, you are in my heart But it still exists like a fragile arrow" },
-  { start = "00:01:34.01", ["end"] = "00:01:40.05", text = "I can't satisfy both sides" },
-  { start = "00:01:40.05", ["end"] = "00:01:44.92", text = "After I have totally lost my way I end up a coward and stubborn" },
-  { start = "00:01:44.92", ["end"] = "00:01:51.09", text = "Since I am not good at setting up the plan Since I can't even call you properly" },
-  { start = "00:01:51.09", ["end"] = "00:01:52.56", text = "Let's do it right" },
-  { start = "00:01:52.56", ["end"] = "00:01:57.50", text = "Even though I told myself so, the situation is way too far from what I imagined" },
-  { start = "00:01:58.03", ["end"] = "00:01:58.73", text = "Whatever" },
-  { start = "00:02:04.44", ["end"] = "00:02:05.37", text = "\"Please don't go\"" },
-  { start = "00:02:05.37", ["end"] = "00:02:06.67", text = "\"I want be as close to you as i can\"" },
-  { start = "00:02:06.67", ["end"] = "00:02:08.01", text = "\"We are so alike\"" },
-  { start = "00:02:08.01", ["end"] = "00:02:09.01", text = "\"I want to hold you\"" },
-  { start = "00:02:10.38", ["end"] = "00:02:14.51", text = "The solution will tighten my chest If I can reach it" },
-  { start = "00:02:15.05", ["end"] = "00:02:15.61", text = "Sorry," },
-  { start = "00:02:15.61", ["end"] = "00:02:18.62", text = "But this is a story that's not so far away" },
-  { start = "00:02:18.62", ["end"] = "00:02:23.96", text = "Please at least don't break the balance of us two" },
-  { start = "00:02:32.40", ["end"] = "00:02:37.97", text = "The way of life goes on, the light spilt between the gap" },
-  { start = "00:02:37.97", ["end"] = "00:02:43.58", text = "What is this light? I have to name it" },
-  { start = "00:02:43.58", ["end"] = "00:02:48.45", text = "What is the best? I can't decide it easily..." },
-  { start = "00:02:48.45", ["end"] = "00:02:52.72", text = "But I now know that I don't want to regret" },
-  { start = "00:02:52.72", ["end"] = "00:02:57.76", text = "It's genuine" },
-  { start = "00:03:06.13", ["end"] = "00:03:09.25", text = "Make a wish on a star, with as much love as possible" },
-  { start = "00:03:09.27", ["end"] = "00:03:11.57", text = "\"I thought about it a lot\"" },
-  { start = "00:03:14.81", ["end"] = "00:03:17.31", text = "\"I have found it out\"" },
-  { start = "00:03:20.28", ["end"] = "00:03:22.18", text = "\"So please listen to me\"" },
-  { start = "00:03:22.18", ["end"] = "00:03:25.48", text = "Connect the word and make the answer" },
-  { start = "00:03:25.48", ["end"] = "00:03:26.72", text = "I can finally say this" },
-  { start = "00:03:27.42", ["end"] = "00:03:28.05", text = "\"I love you\"" },
-  { start = "00:03:33.59", ["end"] = "00:03:34.66", text = "\"You are so beautiful\"" },
-  { start = "00:03:34.66", ["end"] = "00:03:36.03", text = "\"I understand now\"" },
-  { start = "00:03:36.03", ["end"] = "00:03:37.26", text = "\"You can be greedy\"" },
-  { start = "00:03:37.26", ["end"] = "00:03:38.56", text = "\"Let's be together\"" },
-  { start = "00:03:39.43", ["end"] = "00:03:44.50", text = "Wherever you are, you are in my heart Until we connect to the last letter" },
-  { start = "00:03:47.67", ["end"] = "00:03:50.38", text = "Now, the season is about to change" },
-  { start = "00:03:50.38", ["end"] = "00:03:55.95", text = "This weighing scale will look for the next balance" },
-  { start = "00:03:58.45", ["end"] = "00:04:02.15", text = "Will it reach you...?" },
-  { start = "00:04:03.82", ["end"] = "00:04:07.63", text = "I will make it happen!" }
-}
+
+}
+} "!neppah ti ekam lliw I" = txet ,"36.70:40:00" = ]"dne"[ ,"28.30:40:00" = trats {  
+,} "?...uoy hcaer ti lliW" = txet ,"51.20:40:00" = ]"dne"[ ,"54.85:30:00" = trats {  
+,} "ecnalab txen eht rof kool lliw elacs gnihgiew sihT" = txet ,"59.55:30:00" = ]"dne"[ ,"83.05:30:00" = trats {  
+,} "egnahc ot tuoba si nosaes eht ,woN" = txet ,"83.05:30:00" = ]"dne"[ ,"76.74:30:00" = trats {  
+,} "yrots eht gnilevarnu peek s'teL" = txet ,"76.74:30:00" = ]"dne"[ ,"05.44:30:00" = trats {  
+,} "rettel tsal eht ot tcennoc ew litnU traeh ym ni era uoy ,era uoy reverehW" = txet ,"05.44:30:00" = ]"dne"[ ,"34.93:30:00" = trats {  
+,} ""\rehtegot eb s'teL"\" = txet ,"65.83:30:00" = ]"dne"[ ,"62.73:30:00" = trats {  
+,} ""\ydeerg eb nac uoY"\" = txet ,"62.73:30:00" = ]"dne"[ ,"30.63:30:00" = trats {  
+,} ""\won dnatsrednu I"\" = txet ,"30.63:30:00" = ]"dne"[ ,"66.43:30:00" = trats {  
+,} ""\lufituaeb os era uoY"\" = txet ,"66.43:30:00" = ]"dne"[ ,"95.33:30:00" = trats {  
+,} "sthguoht ym htiw emag niahc-drow a gniyalP elbissop sa evol hcum sa htiw ,rats a no hsiw a ekaM" = txet ,"95.33:30:00" = ]"dne"[ ,"28.82:30:00" = trats {  
+,} ""\uoy evol I"\" = txet ,"50.82:30:00" = ]"dne"[ ,"24.72:30:00" = trats {  
+,} "siht yas yllanif nac I" = txet ,"27.62:30:00" = ]"dne"[ ,"84.52:30:00" = trats {  
+,} "rewsna eht ekam dna drow eht tcennoC" = txet ,"84.52:30:00" = ]"dne"[ ,"81.22:30:00" = trats {  
+,} ""\em ot netsil esaelp oS"\" = txet ,"81.22:30:00" = ]"dne"[ ,"82.02:30:00" = trats {  
+,} "elbissop sa evol hcum sa htiw ,rats a no hsiw a ekaM" = txet ,"82.02:30:00" = ]"dne"[ ,"13.71:30:00" = trats {  
+,} ""\tuo ti dnuof evah I"\" = txet ,"13.71:30:00" = ]"dne"[ ,"18.41:30:00" = trats {  
+,} "elbissop sa evol hcum sa htiw ,rats a no hsiw a ekaM" = txet ,"18.41:30:00" = ]"dne"[ ,"75.11:30:00" = trats {  
+,} ""\tol a ti tuoba thguoht I"\" = txet ,"75.11:30:00" = ]"dne"[ ,"72.90:30:00" = trats {  
+,} "elbissop sa evol hcum sa htiw ,rats a no hsiw a ekaM" = txet ,"72.90:30:00" = ]"dne"[ ,"31.60:30:00" = trats {  
+,} "eniuneg s'tI" = txet ,"67.75:20:00" = ]"dne"[ ,"27.25:20:00" = trats {  
+,} "terger ot tnaw t'nod I taht wonk won I tuB" = txet ,"27.25:20:00" = ]"dne"[ ,"54.84:20:00" = trats {  
+,} "...ylisae ti ediced t'nac I ?tseb eht si tahW" = txet ,"54.84:20:00" = ]"dne"[ ,"85.34:20:00" = trats {  
+,} "ti eman ot evah I ?thgil siht si tahW" = txet ,"85.34:20:00" = ]"dne"[ ,"79.73:20:00" = trats {  
+,} "pag eht neewteb tlips thgil eht ,no seog efil fo yaw ehT" = txet ,"79.73:20:00" = ]"dne"[ ,"04.23:20:00" = trats {  
+,} "owt su fo ecnalab eht kaerb t'nod tsael ta esaelP" = txet ,"69.32:20:00" = ]"dne"[ ,"26.81:20:00" = trats {  
+,} "yawa raf os ton s'taht yrots a si siht tuB" = txet ,"26.81:20:00" = ]"dne"[ ,"16.51:20:00" = trats {  
+,} ",yrroS" = txet ,"16.51:20:00" = ]"dne"[ ,"50.51:20:00" = trats {  
+,} "ti hcaer nac I fI tsehc ym nethgit lliw noitulos ehT" = txet ,"15.41:20:00" = ]"dne"[ ,"83.01:20:00" = trats {  
+,} ""\uoy dloh ot tnaw I"\" = txet ,"10.90:20:00" = ]"dne"[ ,"10.80:20:00" = trats {  
+,} ""\ekila os era eW"\" = txet ,"10.80:20:00" = ]"dne"[ ,"76.60:20:00" = trats {  
+,} ""\nac i sa uoy ot esolc sa eb tnaw I"\" = txet ,"76.60:20:00" = ]"dne"[ ,"73.50:20:00" = trats {  
+,} ""\og t'nod esaelP"\" = txet ,"73.50:20:00" = ]"dne"[ ,"44.40:20:00" = trats {  
+,} "sthguoht ym htiw emag niahc-drow a gniyalP elbissop sa evol hcum sa htiw ,rats a no hsiw a ekaM" = txet ,"44.40:20:00" = ]"dne"[ ,"63.95:10:00" = trats {  
+,} "revetahW" = txet ,"37.85:10:00" = ]"dne"[ ,"30.85:10:00" = trats {  
+,} "denigami I tahw morf raf oot yaw si noitautis eht ,os flesym dlot I hguoht nevE" = txet ,"05.75:10:00" = ]"dne"[ ,"65.25:10:00" = trats {  
+,} "thgir ti od s'teL" = txet ,"65.25:10:00" = ]"dne"[ ,"90.15:10:00" = trats {  
+,} "ylreporp uoy llac neve t'nac I ecniS nalp eht pu gnittes ta doog ton ma I ecniS" = txet ,"90.15:10:00" = ]"dne"[ ,"29.44:10:00" = trats {  
+,} "nrobbuts dna drawoc a pu dne I yaw ym tsol yllatot evah I retfA" = txet ,"29.44:10:00" = ]"dne"[ ,"50.04:10:00" = trats {  
+,} "sedis htob yfsitas t'nac I" = txet ,"50.04:10:00" = ]"dne"[ ,"10.43:10:00" = trats {  
+,} "elacs gnihgiew a ekil si nosaes eht ,woN" = txet ,"34.62:10:00" = ]"dne"[ ,"32.12:10:00" = trats {  
+,} "yrots eht gnilevarnu peek s'teL" = txet ,"32.12:10:00" = ]"dne"[ ,"99.71:10:00" = trats {  
+,} "worra eligarf a ekil stsixe llits ti tuB traeh ym ni era uoy ,era uoy reverehW" = txet ,"99.71:10:00" = ]"dne"[ ,"90.31:10:00" = trats {  
+,} ""\dnah ruoy dloh ot tnaw I"\" = txet ,"28.11:10:00" = ]"dne"[ ,"57.01:10:00" = trats {  
+,} ""\ylreporp em ta kool esaelP"\" = txet ,"57.01:10:00" = ]"dne"[ ,"84.90:10:00" = trats {  
+,} ""\syawla uoy knahT"\" = txet ,"84.90:10:00" = ]"dne"[ ,"11.80:10:00" = trats {  
+,} ""\dalg ma I"\" = txet ,"11.80:10:00" = ]"dne"[ ,"52.70:10:00" = trats {  
+,} "sthguoht ym htiw emag niahc-drow a gniyalP elbissop sa evol hcum sa htiw ,rats a no hsiw a ekaM" = txet ,"52.70:10:00" = ]"dne"[ ,"11.20:10:00" = trats {  
+,} "uoy gnir gnir" = txet ,"11.20:10:00" = ]"dne"[ ,"46.00:10:00" = trats {  
+,} "tluciffid os s'tI ?od I dluohs tahW" = txet ,"46.00:10:00" = ]"dne"[ ,"05.65:00:00" = trats {  
+,} "yldnilb gnihcraes fo deirrow leef I semitemoS htmraw deen I semitemoS" = txet ,"05.65:00:00" = ]"dne"[ ,"36.05:00:00" = trats {  
+,} "ydeerg dna tluciffid woH" = txet ,"36.05:00:00" = ]"dne"[ ,"38.74:00:00" = trats {  
+,} "ylisae ti tegrof lliw I ,gnihctaw luferac ton ma I fI" = txet ,"38.74:00:00" = ]"dne"[ ,"27.54:00:00" = trats {  
+,} "yadretsey naht yadot reippah eb ot desoppus ma I" = txet ,"27.54:00:00" = ]"dne"[ ,"56.93:00:00" = trats {  
+,} "wen gnihtemos rof kool dna wonk ydaerla I tahw evaeL" = txet ,"59.83:00:00" = ]"dne"[ ,"87.33:00:00" = trats {  
+,} "emoh og ot etuor lausu a esohc I" = txet ,"87.33:00:00" = ]"dne"[ ,"74.82:00:00" = trats {  
+,} "elacs gnihgiew a ekil si nosaes eht ,woN" = txet ,"09.61:00:00" = ]"dne"[ ,"66.21:00:00" = trats {  
+,} "rewsna eht otni ti ekam dna sdrow eht tcennoC" = txet ,"66.21:00:00" = ]"dne"[ ,"28.90:00:00" = trats {  
+,} "sthguoht ym htiw emag niahc-drow a gniyalP elbissop sa evol hcum sa htiw ,rats a no hsiw a ekaM" = txet ,"51.90:00:00" = ]"dne"[ ,"87.40:00:00" = trats {  
+{

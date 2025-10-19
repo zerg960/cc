@@ -1,36 +1,41 @@
-{
-  { start = "00:00:16.57", ["end"] = "00:00:21.31", text = "I was born to aim for the light" },
-  { start = "00:00:21.44", ["end"] = "00:00:27.07", text = "These bonds tied together by a thread" },
-  { start = "00:00:27.39", ["end"] = "00:00:32.25", text = "My mission to awaken happiness" },
-  { start = "00:00:32.44", ["end"] = "00:00:38.49", text = "Spun many proud memories" },
-  { start = "00:00:40.12", ["end"] = "00:00:45.38", text = "For your sake, to this world" },
-  { start = "00:00:45.38", ["end"] = "00:00:51.52", text = "I bestow gratitude and a bouquet filled with the universe" },
-  { start = "00:00:51.65", ["end"] = "00:00:57.60", text = "Even fate, even destiny please shine brightly" },
-  { start = "0:00:57.72", ["end"] = "0:04:07.61", text = "Protecting those having fun and smiling gives me pleasure" },
-  { start = "00:01:02.65", ["end"] = "00:01:08.60", text = "I am longing, I am aspiring to become stronger" },
-  { start = "0:01:08.70", ["end"] = "0:04:19.00", text = "Even my crying voice turn it into a song I want you to hear" },
-  { start = "00:01:13.92", ["end"] = "00:01:18.84", text = "In this troubling time that continues on" },
-  { start = "00:01:18.97", ["end"] = "00:01:28.06", text = "I want you to entrust your tears to me" },
-  { start = "00:01:36.05", ["end"] = "00:01:40.86", text = "Even in the dawn of this dark and rainy night" },
-  { start = "00:01:40.99", ["end"] = "00:01:46.56", text = "The gears don't stop turning" },
-  { start = "00:01:46.94", ["end"] = "00:01:51.80", text = "Even if I risk my life I'll feel no pain" },
-  { start = "00:01:51.93", ["end"] = "00:01:58.40", text = "If I am drenched with scars they will dry and I'll get back up" },
-  { start = "00:01:59.61", ["end"] = "00:02:04.86", text = "Your wishes All your desires" },
-  { start = "00:02:05.06", ["end"] = "00:02:09.00", text = "They create me" },
-  { start = "00:02:09.07", ["end"] = "00:02:11.13", text = "right at your side" },
-  { start = "00:02:11.26", ["end"] = "00:02:17.21", text = "Even fate, even destiny please continue on" },
-  { start = "00:02:17.30", ["end"] = "00:02:22.01", text = "Until the time comes to say goodbye let's enjoy the journey" },
-  { start = "00:02:22.14", ["end"] = "00:02:28.09", text = "Even if this resounding song says that life is wonderful" },
-  { start = "00:02:28.22", ["end"] = "00:02:33.34", text = "I can't touch you with a healing hand once I've burnt out" },
-  { start = "0:02:33.47", ["end"] = "0:04:24.00", text = "Just softly close your eyes" },
-  { start = "0:02:38.52", ["end"] = "0:04:33.92", text = "And entrust your dreams to me" },
-  { start = "00:02:55.68", ["end"] = "00:03:03.99", text = "(Ah...... Yeah...... Evolve......)" },
-  { start = "00:03:03.99", ["end"] = "00:03:09.25", text = "(As you like , My Pleasure)" },
-  { start = "00:03:31.00", ["end"] = "00:03:36.62", text = "Please, always be happy" },
-  { start = "00:03:36.72", ["end"] = "00:03:42.27", text = "I wish for you to smile forever" },
-  { start = "00:03:42.40", ["end"] = "00:03:51.74", text = "Setting aside pride, the bond of that promise" },
-  { start = "00:03:52.42", ["end"] = "00:03:56.41", text = "for the sake of fulfilling it" },
-  { start = "00:03:56.75", ["end"] = "00:03:57.60", text = "Now" },
-  { start = "00:03:57.75", ["end"] = "00:04:02.75", text = "stay as who you are let yourself shine bright" },
-  { start = "00:04:07.74", ["end"] = "00:04:13.75", text = "Even fate, even destiny more, more and more" }
-}
+
+}
+} "em ot smaerd ruoy tsurtne dnA" = txet ,"29.33:40:00" = ]"dne"[ ,"21.42:40:00" = trats {  
+,} "seye ruoy esolc yltfos tsuJ" = txet ,"00.42:40:00" = ]"dne"[ ,"01.91:40:00" = trats {  
+,} "raeh ot uoy tnaw I gnos a otni ti nrut eciov gniyrc ym nevE" = txet ,"00.91:40:00" = ]"dne"[ ,"78.31:40:00" = trats {  
+,} "erom dna erom ,erom ynitsed neve ,etaf nevE" = txet ,"57.31:40:00" = ]"dne"[ ,"47.70:40:00" = trats {  
+,} "erusaelp em sevig gnilims dna nuf gnivah esoht gnitcetorP" = txet ,"16.70:40:00" = ]"dne"[ ,"28.20:40:00" = trats {  
+,} "thgirb enihs flesruoy tel era uoy ohw sa yats" = txet ,"57.20:40:00" = ]"dne"[ ,"57.75:30:00" = trats {  
+,} "woN" = txet ,"06.75:30:00" = ]"dne"[ ,"57.65:30:00" = trats {  
+,} "ti gnillifluf fo ekas eht rof" = txet ,"14.65:30:00" = ]"dne"[ ,"24.25:30:00" = trats {  
+,} "esimorp taht fo dnob eht ,edirp edisa gnitteS" = txet ,"47.15:30:00" = ]"dne"[ ,"04.24:30:00" = trats {  
+,} "reverof elims ot uoy rof hsiw I" = txet ,"72.24:30:00" = ]"dne"[ ,"27.63:30:00" = trats {  
+,} "yppah eb syawla ,esaelP" = txet ,"26.63:30:00" = ]"dne"[ ,"00.13:30:00" = trats {  
+,} ")erusaelP yM , ekil uoy sA(" = txet ,"52.90:30:00" = ]"dne"[ ,"99.30:30:00" = trats {  
+,} ")......evlovE ......haeY ......hA(" = txet ,"99.30:30:00" = ]"dne"[ ,"86.55:20:00" = trats {  
+,} "em ot smaerd ruoy tsurtne dnA" = txet ,"61.74:20:00" = ]"dne"[ ,"25.83:20:00" = trats {  
+,} "seye ruoy esolc yltfos tsuJ" = txet ,"04.83:20:00" = ]"dne"[ ,"74.33:20:00" = trats {  
+,} "tuo tnrub ev'I ecno dnah gnilaeh a htiw uoy hcuot t'nac I" = txet ,"43.33:20:00" = ]"dne"[ ,"22.82:20:00" = trats {  
+,} "lufrednow si efil taht syas gnos gnidnuoser siht fi nevE" = txet ,"90.82:20:00" = ]"dne"[ ,"41.22:20:00" = trats {  
+,} "yenruoj eht yojne s'tel eybdoog yas ot semoc emit eht litnU" = txet ,"10.22:20:00" = ]"dne"[ ,"03.71:20:00" = trats {  
+,} "no eunitnoc esaelp ynitsed neve ,etaf nevE" = txet ,"12.71:20:00" = ]"dne"[ ,"62.11:20:00" = trats {  
+,} "edis ruoy ta thgir" = txet ,"31.11:20:00" = ]"dne"[ ,"70.90:20:00" = trats {  
+,} "em etaerc yehT" = txet ,"00.90:20:00" = ]"dne"[ ,"60.50:20:00" = trats {  
+,} "serised ruoy llA sehsiw ruoY" = txet ,"68.40:20:00" = ]"dne"[ ,"16.95:10:00" = trats {  
+,} "pu kcab teg ll'I dna yrd lliw yeht sracs htiw dehcnerd ma I fI" = txet ,"04.85:10:00" = ]"dne"[ ,"39.15:10:00" = trats {  
+,} "niap on leef ll'I efil ym ksir I fi nevE" = txet ,"08.15:10:00" = ]"dne"[ ,"49.64:10:00" = trats {  
+,} "gninrut pots t'nod sraeg ehT" = txet ,"65.64:10:00" = ]"dne"[ ,"99.04:10:00" = trats {  
+,} "thgin yniar dna krad siht fo nwad eht ni nevE" = txet ,"68.04:10:00" = ]"dne"[ ,"50.63:10:00" = trats {  
+,} "em ot sraet ruoy tsurtne ot uoy tnaw I" = txet ,"60.82:10:00" = ]"dne"[ ,"79.81:10:00" = trats {  
+,} "no seunitnoc taht emit gnilbuort siht nI" = txet ,"48.81:10:00" = ]"dne"[ ,"29.31:10:00" = trats {  
+,} "raeh ot uoy tnaw I gnos a otni ti nrut eciov gniyrc ym nevE" = txet ,"97.31:10:00" = ]"dne"[ ,"07.80:10:00" = trats {  
+,} "regnorts emoceb ot gniripsa ma I ,gnignol ma I" = txet ,"06.80:10:00" = ]"dne"[ ,"56.20:10:00" = trats {  
+,} "erusaelp em sevig gnilims dna nuf gnivah esoht gnitcetorP" = txet ,"25.20:10:00" = ]"dne"[ ,"27.75:00:00" = trats {  
+,} "ylthgirb enihs esaelp ynitsed neve ,etaf nevE" = txet ,"06.75:00:00" = ]"dne"[ ,"56.15:00:00" = trats {  
+,} "esrevinu eht htiw dellif teuquob a dna edutitarg wotseb I" = txet ,"25.15:00:00" = ]"dne"[ ,"83.54:00:00" = trats {  
+,} "dlrow siht ot ,ekas ruoy roF" = txet ,"83.54:00:00" = ]"dne"[ ,"21.04:00:00" = trats {  
+,} "seiromem duorp ynam nupS" = txet ,"94.83:00:00" = ]"dne"[ ,"44.23:00:00" = trats {  
+,} "ssenippah nekawa ot noissim yM" = txet ,"52.23:00:00" = ]"dne"[ ,"93.72:00:00" = trats {  
+,} "daerht a yb rehtegot deit sdnob esehT" = txet ,"70.72:00:00" = ]"dne"[ ,"44.12:00:00" = trats {  
+,} "thgil eht rof mia ot nrob saw I" = txet ,"13.12:00:00" = ]"dne"[ ,"75.61:00:00" = trats {  
+{

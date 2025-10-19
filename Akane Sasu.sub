@@ -1,24 +1,25 @@
-{
-  { start = "00:00:20.05", ["end"] = "00:00:33.69", text = "The dry wind rushes through the falling leaves in the street corner" },
-  { start = "00:00:33.69", ["end"] = "00:00:46.01", text = "The long shadows, the avenue of gingko trees, I wanted to watch the season go" },
-  { start = "00:00:46.01", ["end"] = "00:00:59.63", text = "Calls without replies, in a moment, they're swept away" },
-  { start = "00:00:59.63", ["end"] = "00:01:14.77", text = "Through the main street, through the crowd, to somewhere far, where no one is around" },
-  { start = "00:01:14.77", ["end"] = "00:01:25.77", text = "I knew it all along, but pretended not to notice" },
-  { start = "00:01:25.77", ["end"] = "00:01:38.82", text = "I couldn't do anything alone" },
-  { start = "00:01:40.70", ["end"] = "00:01:53.74", text = "Say good bye to the phantoms I met, in this crimson-painted sky" },
-  { start = "00:01:53.75", ["end"] = "00:02:07.67", text = "My hand upon the spilling weakness, like a single barren flower" },
-  { start = "00:02:07.68", ["end"] = "00:02:18.29", text = "Making their wishes come true and understanding the pain" },
-  { start = "00:02:26.38", ["end"] = "00:02:40.21", text = "The cries of the passing birds, fading in the reddening clouds" },
-  { start = "00:02:40.21", ["end"] = "00:02:55.35", text = "Growing apart on the way home, now I'm all alone, where no one is around" },
-  { start = "00:02:55.35", ["end"] = "00:03:06.32", text = "Even if I noticed the colors of the scenery that I was in" },
-  { start = "00:03:06.32", ["end"] = "00:03:18.06", text = "All alone, I couldn't speak out" },
-  { start = "00:03:18.06", ["end"] = "00:03:30.98", text = "Kiss the phantoms that I loved, in the sky fading into twilight" },
-  { start = "00:03:30.98", ["end"] = "00:03:44.88", text = "The evening star hasn't shined yet, the waiting night is hazy, where is the moon?" },
-  { start = "00:03:44.89", ["end"] = "00:03:53.30", text = "Torn apart and understanding the pain" },
-  { start = "00:03:53.30", ["end"] = "00:04:01.26", text = "In the repeating days, I was searching for" },
-  { start = "00:04:01.27", ["end"] = "00:04:12.55", text = "The hope to walk on" },
-  { start = "00:04:13.19", ["end"] = "00:04:26.10", text = "Say good bye to the phantoms I met, the longing is in this sky" },
-  { start = "00:04:26.10", ["end"] = "00:04:40.17", text = "My hand upon the days that passed, like a single petal" },
-  { start = "00:04:40.17", ["end"] = "00:04:52.18", text = "Layering the pain and understanding each encounters" },
-  { start = "00:04:53.12", ["end"] = "00:05:05.43", text = "Repeating the encounters and understanding their wishes" }
-}
+
+}
+} "sehsiw rieht gnidnatsrednu dna sretnuocne eht gnitaepeR" = txet ,"34.50:50:00" = ]"dne"[ ,"21.35:40:00" = trats {  
+,} "sretnuocne hcae gnidnatsrednu dna niap eht gnireyaL" = txet ,"81.25:40:00" = ]"dne"[ ,"71.04:40:00" = trats {  
+,} "latep elgnis a ekil ,dessap taht syad eht nopu dnah yM" = txet ,"71.04:40:00" = ]"dne"[ ,"01.62:40:00" = trats {  
+,} "yks siht ni si gnignol eht ,tem I smotnahp eht ot eyb doog yaS" = txet ,"01.62:40:00" = ]"dne"[ ,"91.31:40:00" = trats {  
+,} "no klaw ot epoh ehT" = txet ,"55.21:40:00" = ]"dne"[ ,"72.10:40:00" = trats {  
+,} "rof gnihcraes saw I ,syad gnitaeper eht nI" = txet ,"62.10:40:00" = ]"dne"[ ,"03.35:30:00" = trats {  
+,} "niap eht gnidnatsrednu dna trapa nroT" = txet ,"03.35:30:00" = ]"dne"[ ,"98.44:30:00" = trats {  
+,} "?noom eht si erehw ,yzah si thgin gnitiaw eht ,tey denihs t'nsah rats gnineve ehT" = txet ,"88.44:30:00" = ]"dne"[ ,"89.03:30:00" = trats {  
+,} "thgiliwt otni gnidaf yks eht ni ,devol I taht smotnahp eht ssiK" = txet ,"89.03:30:00" = ]"dne"[ ,"60.81:30:00" = trats {  
+,} "tuo kaeps t'ndluoc I ,enola llA" = txet ,"60.81:30:00" = ]"dne"[ ,"23.60:30:00" = trats {  
+,} "ni saw I taht yrenecs eht fo sroloc eht deciton I fi nevE" = txet ,"23.60:30:00" = ]"dne"[ ,"53.55:20:00" = trats {  
+,} "dnuora si eno on erehw ,enola lla m'I won ,emoh yaw eht no trapa gniworG" = txet ,"53.55:20:00" = ]"dne"[ ,"12.04:20:00" = trats {  
+,} "sduolc gninedder eht ni gnidaf ,sdrib gnissap eht fo seirc ehT" = txet ,"12.04:20:00" = ]"dne"[ ,"83.62:20:00" = trats {  
+,} "niap eht gnidnatsrednu dna eurt emoc sehsiw rieht gnikaM" = txet ,"92.81:20:00" = ]"dne"[ ,"86.70:20:00" = trats {  
+,} "rewolf nerrab elgnis a ekil ,ssenkaew gnillips eht nopu dnah yM" = txet ,"76.70:20:00" = ]"dne"[ ,"57.35:10:00" = trats {  
+,} "yks detniap-nosmirc siht ni ,tem I smotnahp eht ot eyb doog yaS" = txet ,"47.35:10:00" = ]"dne"[ ,"07.04:10:00" = trats {  
+,} "enola gnihtyna od t'ndluoc I" = txet ,"28.83:10:00" = ]"dne"[ ,"77.52:10:00" = trats {  
+,} "eciton ot ton dedneterp tub ,gnola lla ti wenk I" = txet ,"77.52:10:00" = ]"dne"[ ,"77.41:10:00" = trats {  
+,} "dnuora si eno on erehw ,raf erehwemos ot ,dworc eht hguorht ,teerts niam eht hguorhT" = txet ,"77.41:10:00" = ]"dne"[ ,"36.95:00:00" = trats {  
+,} "yawa tpews er'yeht ,tnemom a ni ,seilper tuohtiw sllaC" = txet ,"36.95:00:00" = ]"dne"[ ,"10.64:00:00" = trats {  
+,} "og nosaes eht hctaw ot detnaw I ,seert okgnig fo euneva eht ,swodahs gnol ehT" = txet ,"10.64:00:00" = ]"dne"[ ,"96.33:00:00" = trats {  
+,} "renroc teerts eht ni sevael gnillaf eht hguorht sehsur dniw yrd ehT" = txet ,"96.33:00:00" = ]"dne"[ ,"50.02:00:00" = trats {  
+{

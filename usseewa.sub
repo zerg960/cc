@@ -1,48 +1,49 @@
-{
-  { start = "00:00:00.91", ["end"] = "00:00:02.19", text = "What is rightness?" },
-  { start = "00:00:02.19", ["end"] = "00:00:03.70", text = "What is stupidity?" },
-  { start = "00:00:03.70", ["end"] = "00:00:07.57", text = "I will show you what they are" },
-  { start = "00:00:16.69", ["end"] = "00:00:19.20", text = "I was an honor student being young" },
-  { start = "00:00:19.20", ["end"] = "00:00:22.05", text = "Before I realized, I was already grown up" },
-  { start = "00:00:22.05", ["end"] = "00:00:24.68", text = "A train of thought like a knife" },
-  { start = "00:00:24.68", ["end"] = "00:00:26.68", text = "Which I didn't have that with me" },
-  { start = "00:00:26.68", ["end"] = "00:00:28.30", text = "But I'm not having enough fun" },
-  { start = "00:00:28.30", ["end"] = "00:00:29.85", text = "Something is missing" },
-  { start = "00:00:29.85", ["end"] = "00:00:32.64", text = "These troubles better be somebody's fault" },
-  { start = "00:00:32.64", ["end"] = "00:00:36.66", text = "I'm just confused errday" },
-  { start = "00:00:36.95", ["end"] = "00:00:38.13", text = "Well, is that so?" },
-  { start = "00:00:38.13", ["end"] = "00:00:40.69", text = "Understanding the latest trends" },
-  { start = "00:00:40.69", ["end"] = "00:00:43.45", text = "Checking stock market on my way to work" },
-  { start = "00:00:43.45", ["end"] = "00:00:46.20", text = "Joining a company with pure spirit" },
-  { start = "00:00:46.20", ["end"] = "00:00:49.54", text = "These are the obvious rules for us workers" },
-  { start = "0:00:51.00", ["end"] = "0:02:00.62", text = "Huh??" },
-  { start = "0:00:51.69", ["end"] = "0:03:03.90", text = "Shut up, shut up, shut the f*** up!" },
-  { start = "00:00:54.08", ["end"] = "00:00:56.70", text = "I'm healthier than you think" },
-  { start = "0:00:57.00", ["end"] = "0:02:55.80", text = "You are too mediocre to understand me, perhaps" },
-  { start = "00:01:02.69", ["end"] = "00:01:04.36", text = "Ah, you are so perfect match to" },
-  { start = "00:01:04.36", ["end"] = "00:01:07.80", text = "Those ordinary melodies of yours" },
-  { start = "00:01:10.40", ["end"] = "00:01:14.59", text = "I deal things differently so no problem at all!" },
-  { start = "00:01:25.26", ["end"] = "00:01:27.97", text = "Yeah, I'm an exemplary person" },
-  { start = "00:01:27.97", ["end"] = "00:01:30.76", text = "So \"no thanks\" to actually punching someone" },
-  { start = "00:01:30.76", ["end"] = "00:01:36.39", text = "If I'll point my muzzle of words to your head and fire" },
-  { start = "00:01:36.39", ["end"] = "00:01:38.70", text = "Wouldn't that be so crazy? I can't stop" },
-  { start = "00:01:38.70", ["end"] = "00:01:41.73", text = "Complaining and complaining til you die" },
-  { start = "00:01:41.73", ["end"] = "00:01:45.07", text = "My spirit becomes sadistic" },
-  { start = "00:01:45.80", ["end"] = "00:01:47.00", text = "I'm f***ing tired" },
-  { start = "00:01:47.00", ["end"] = "00:01:49.69", text = "Pour drinks when glasses are empty" },
-  { start = "00:01:49.69", ["end"] = "00:01:52.23", text = "Take off the skewer so it's easier for everyone to eat" },
-  { start = "00:01:52.23", ["end"] = "00:01:54.81", text = "Check and order before anyone does" },
-  { start = "00:01:54.81", ["end"] = "00:01:57.98", text = "These are the minimum rules for social manner" },
-  { start = "00:02:00.62", ["end"] = "00:02:02.62", text = "Shut up, shut up, shut the f*** up!" },
-  { start = "00:02:02.62", ["end"] = "00:02:05.75", text = "Close your stinking mouth, I can't stand it" },
-  { start = "00:02:05.75", ["end"] = "00:02:11.50", text = "I am the modern spokesperson" },
-  { start = "00:02:11.50", ["end"] = "00:02:12.94", text = "I'm fed up with" },
-  { start = "00:02:12.94", ["end"] = "00:02:16.45", text = "Those rehash parody of yours" },
-  { start = "00:02:19.27", ["end"] = "00:02:23.15", text = "Draw an X on your fat face" },
-  { start = "00:02:42.00", ["end"] = "00:02:44.77", text = "I'm your so-called genius" },
-  { start = "00:02:47.57", ["end"] = "00:02:50.29", text = "I'm healthier than you think" },
-  { start = "00:02:55.80", ["end"] = "00:02:57.00", text = "Ah, so boring" },
-  { start = "00:02:57.00", ["end"] = "00:03:01.10", text = "How many times do I have to listen to those memories of yours" },
-  { start = "00:03:03.90", ["end"] = "00:03:07.65", text = "I know I'm not a dig deal either, but I don't care" },
-  { start = "00:03:07.65", ["end"] = "00:03:09.25", text = "No problem at all" }
-}
+
+}
+} "lla ta melborp oN" = txet ,"52.90:30:00" = ]"dne"[ ,"56.70:30:00" = trats {  
+,} "erac t'nod I tub ,rehtie laed gid a ton m'I wonk I" = txet ,"56.70:30:00" = ]"dne"[ ,"09.30:30:00" = trats {  
+,} "sruoy fo seiromem esoht ot netsil ot evah I od semit ynam woH" = txet ,"01.10:30:00" = ]"dne"[ ,"00.75:20:00" = trats {  
+,} "gnirob os ,hA" = txet ,"00.75:20:00" = ]"dne"[ ,"08.55:20:00" = trats {  
+,} "kniht uoy naht reihtlaeh m'I" = txet ,"92.05:20:00" = ]"dne"[ ,"75.74:20:00" = trats {  
+,} "suineg dellac-os ruoy m'I" = txet ,"77.44:20:00" = ]"dne"[ ,"00.24:20:00" = trats {  
+,} "ecaf taf ruoy no X na warD" = txet ,"51.32:20:00" = ]"dne"[ ,"72.91:20:00" = trats {  
+,} "sruoy fo ydorap hsaher esohT" = txet ,"54.61:20:00" = ]"dne"[ ,"49.21:20:00" = trats {  
+,} "htiw pu def m'I" = txet ,"49.21:20:00" = ]"dne"[ ,"05.11:20:00" = trats {  
+,} "nosrepsekops nredom eht ma I" = txet ,"05.11:20:00" = ]"dne"[ ,"57.50:20:00" = trats {  
+,} "ti dnats t'nac I ,htuom gniknits ruoy esolC" = txet ,"57.50:20:00" = ]"dne"[ ,"26.20:20:00" = trats {  
+,} "!pu ***f eht tuhs ,pu tuhs ,pu tuhS" = txet ,"26.20:20:00" = ]"dne"[ ,"26.00:20:00" = trats {  
+,} "rennam laicos rof selur muminim eht era esehT" = txet ,"89.75:10:00" = ]"dne"[ ,"18.45:10:00" = trats {  
+,} "seod enoyna erofeb redro dna kcehC" = txet ,"18.45:10:00" = ]"dne"[ ,"32.25:10:00" = trats {  
+,} "tae ot enoyreve rof reisae s'ti os reweks eht ffo ekaT" = txet ,"32.25:10:00" = ]"dne"[ ,"96.94:10:00" = trats {  
+,} "ytpme era sessalg nehw sknird ruoP" = txet ,"96.94:10:00" = ]"dne"[ ,"00.74:10:00" = trats {  
+,} "derit gni***f m'I" = txet ,"00.74:10:00" = ]"dne"[ ,"08.54:10:00" = trats {  
+,} "citsidas semoceb tirips yM" = txet ,"70.54:10:00" = ]"dne"[ ,"37.14:10:00" = trats {  
+,} "eid uoy lit gninialpmoc dna gninialpmoC" = txet ,"37.14:10:00" = ]"dne"[ ,"07.83:10:00" = trats {  
+,} "pots t'nac I ?yzarc os eb taht t'ndluoW" = txet ,"07.83:10:00" = ]"dne"[ ,"93.63:10:00" = trats {  
+,} "erif dna daeh ruoy ot sdrow fo elzzum ym tniop ll'I fI" = txet ,"93.63:10:00" = ]"dne"[ ,"67.03:10:00" = trats {  
+,} "enoemos gnihcnup yllautca ot "\sknaht on"\ oS" = txet ,"67.03:10:00" = ]"dne"[ ,"79.72:10:00" = trats {  
+,} "nosrep yralpmexe na m'I ,haeY" = txet ,"79.72:10:00" = ]"dne"[ ,"62.52:10:00" = trats {  
+,} "!lla ta melborp on os yltnereffid sgniht laed I" = txet ,"95.41:10:00" = ]"dne"[ ,"04.01:10:00" = trats {  
+,} "sruoy fo seidolem yranidro esohT" = txet ,"08.70:10:00" = ]"dne"[ ,"63.40:10:00" = trats {  
+,} "ot hctam tcefrep os era uoy ,hA" = txet ,"63.40:10:00" = ]"dne"[ ,"96.20:10:00" = trats {  
+,} "spahrep ,em dnatsrednu ot ercoidem oot era uoY" = txet ,"08.55:20:0" = ]"dne"[ ,"00.75:00:0" = trats {  
+,} "kniht uoy naht reihtlaeh m'I" = txet ,"07.65:00:00" = ]"dne"[ ,"80.45:00:00" = trats {  
+,} "!pu ***f eht tuhs ,pu tuhs ,pu tuhS" = txet ,"09.30:30:0" = ]"dne"[ ,"96.15:00:0" = trats {  
+,} "??huH" = txet ,"26.00:20:0" = ]"dne"[ ,"00.15:00:0" = trats {  
+,} "srekrow su rof selur suoivbo eht era esehT" = txet ,"45.94:00:00" = ]"dne"[ ,"02.64:00:00" = trats {  
+,} "tirips erup htiw ynapmoc a gninioJ" = txet ,"02.64:00:00" = ]"dne"[ ,"54.34:00:00" = trats {  
+,} "krow ot yaw ym no tekram kcots gnikcehC" = txet ,"54.34:00:00" = ]"dne"[ ,"96.04:00:00" = trats {  
+,} "sdnert tsetal eht gnidnatsrednU" = txet ,"96.04:00:00" = ]"dne"[ ,"31.83:00:00" = trats {  
+,} "?os taht si ,lleW" = txet ,"31.83:00:00" = ]"dne"[ ,"59.63:00:00" = trats {  
+,} "yadrre desufnoc tsuj m'I" = txet ,"66.63:00:00" = ]"dne"[ ,"46.23:00:00" = trats {  
+,} "tluaf s'ydobemos eb retteb selbuort esehT" = txet ,"46.23:00:00" = ]"dne"[ ,"58.92:00:00" = trats {  
+,} "gnissim si gnihtemoS" = txet ,"58.92:00:00" = ]"dne"[ ,"03.82:00:00" = trats {  
+,} "nuf hguone gnivah ton m'I tuB" = txet ,"03.82:00:00" = ]"dne"[ ,"86.62:00:00" = trats {  
+,} "em htiw taht evah t'ndid I hcihW" = txet ,"86.62:00:00" = ]"dne"[ ,"86.42:00:00" = trats {  
+,} "efink a ekil thguoht fo niart A" = txet ,"86.42:00:00" = ]"dne"[ ,"50.22:00:00" = trats {  
+,} "pu nworg ydaerla saw I ,dezilaer I erofeB" = txet ,"50.22:00:00" = ]"dne"[ ,"02.91:00:00" = trats {  
+,} "gnuoy gnieb tneduts ronoh na saw I" = txet ,"02.91:00:00" = ]"dne"[ ,"96.61:00:00" = trats {  
+,} "era yeht tahw uoy wohs lliw I" = txet ,"75.70:00:00" = ]"dne"[ ,"07.30:00:00" = trats {  
+,} "?ytidiputs si tahW" = txet ,"07.30:00:00" = ]"dne"[ ,"91.20:00:00" = trats {  
+,} "?ssenthgir si tahW" = txet ,"91.20:00:00" = ]"dne"[ ,"19.00:00:00" = trats {  
+{

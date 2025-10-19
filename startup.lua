@@ -129,62 +129,6 @@ function(require, repo)
             end
         end
         
-        -- ===== Playback loop =====
-        local function playerLoop()
-            while true do
-                if currentSong and playing then
-                    local songData = currentSong.fn()
-                    local dataLen = #songData
-                    for i = 1, dataLen, 16*1024 do
-                        if stopFlag then break end
-                        local chunk = songData:sub(i, math.min(i+16*1024-1, dataLen))
-                        local buffer = decoder(chunk)
-                        local pending = {}
-                        
-                        for _, spk in pairs(speakers) do
-                        if stopFlag then break end
-                        if not spk.playAudio(buffer, volume) then
-                            pending[peripheral.getName(spk)] = spk
-                        end
-                        end
-                        
-                        while not stopFlag and next(pending) do
-                        local _, name = os.pullEvent("speaker_audio_empty")
-                        local spk = pending[name]
-                        if spk and spk.playAudio(buffer, volume) then
-                            pending[name] = nil
-                        end
-                        end
-                    end
-        
-                    if stopFlag then
-                        stopFlag = false
-                    else
-                        -- Auto-advance
-                        if loopMode == 2 then
-                            -- loop current song
-                        elseif shuffle then
-                            currentSong = songs[math.random(#songs)]
-                        elseif loopMode == 1 then
-                            local idx = 1
-                            for i,s in ipairs(songs) do if s==currentSong then idx=i end end
-                            currentSong = songs[idx % #songs + 1]
-                        else
-                            local idx = 1
-                            for i,s in ipairs(songs) do if s==currentSong then idx=i end end
-                            if idx<#songs then currentSong = songs[idx+1] else currentSong = nil playing=false end
-                        end
-                        settings.set("currentSong", currentSong and currentSong.name or "nil")
-                        settings.set("playing", playing)
-                        settings.save()
-                    end
-                    drawUI()
-                else
-                    os.sleep(0.05)
-                end
-            end
-        end
-        
         -- ===== Input loop =====
         local function inputLoop()
             drawUI()
@@ -256,6 +200,62 @@ function(require, repo)
             end
         end
         
+        -- ===== Playback loop =====
+        local function playerLoop()
+            while true do
+                if currentSong and playing then
+                    local songData = currentSong.fn()
+                    local dataLen = #songData
+                    for i = 1, dataLen, 16*1024 do
+                        if stopFlag then break end
+                        local chunk = songData:sub(i, math.min(i+16*1024-1, dataLen))
+                        local buffer = decoder(chunk)
+                        local pending = {}
+                        
+                        for _, spk in pairs(speakers) do
+                        if stopFlag then break end
+                        if not spk.playAudio(buffer, volume) then
+                            pending[peripheral.getName(spk)] = spk
+                        end
+                        end
+                        
+                        while not stopFlag and next(pending) do
+                        local _, name = os.pullEvent("speaker_audio_empty")
+                        local spk = pending[name]
+                        if spk and spk.playAudio(buffer, volume) then
+                            pending[name] = nil
+                        end
+                        end
+                    end
+        
+                    if stopFlag then
+                        stopFlag = false
+                    else
+                        -- Auto-advance
+                        if loopMode == 2 then
+                            -- loop current song
+                        elseif shuffle then
+                            currentSong = songs[math.random(#songs)]
+                        elseif loopMode == 1 then
+                            local idx = 1
+                            for i,s in ipairs(songs) do if s==currentSong then idx=i end end
+                            currentSong = songs[idx % #songs + 1]
+                        else
+                            local idx = 1
+                            for i,s in ipairs(songs) do if s==currentSong then idx=i end end
+                            if idx<#songs then currentSong = songs[idx+1] else currentSong = nil playing=false end
+                        end
+                        settings.set("currentSong", currentSong and currentSong.name or "nil")
+                        settings.set("playing", playing)
+                        settings.save()
+                    end
+                    drawUI()
+                else
+                    os.sleep(0.05)
+                end
+            end
+        end
+        
         parallel.waitForAny(playerLoop, inputLoop)
     end
 
@@ -303,8 +303,351 @@ function(require, repo)
 
     local char, byte, concat = string.char, string.byte, table.concat
     local min, max, floor = math.min, math.max, math.floor
+    local http_get, inflate_stream
+    local root
 
-    local function inflate_stream(src, kind, in_chunk, out_max)
+    local function makeVideoPlayer()
+        local char, byte, concat = string.char, string.byte, table.concat
+        local bor, band, lshift, rshift = bit32.bor, bit32.band, bit32.lshift, bit32.rshift
+        local min, max, floor = math.min, math.max, math.floor
+        local epoch = os.epoch
+        local pow2 = {}
+        for i = 0, 15 do pow2[i] = 2^i end
+    
+        local function log2(n) local _, r = math.frexp(n); return r - 1 end
+        
+        local function ends_with(str, suffix)
+            return suffix == "" or str:sub(-#suffix) == suffix
+        end
+
+        local ch128 = {}
+        for i = 0, 255 do ch128[i] = char(128 + (i % 128)) end
+        local blitColors = {[0] = "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"}
+        
+        local function wrapText(text, width)
+            text = tostring(text or "")
+            local out, line = {}, ""
+            local function flushLine() if #line > 0 then out[#out+1] = line end; line = "" end
+            for para in (text .. "\n"):gmatch("([^\n]*)\n") do
+                for word in para:gmatch("%S+") do
+                    if #line == 0 then line = word
+                    elseif #line + 1 + #word <= width then line = line .. " " .. word
+                    else out[#out+1] = line; line = word end
+                end
+                flushLine()
+            end
+            return out
+        end
+
+        local _texta, _fga, _bga = {}, {}, {}
+        local _trow,  _frow, _brow = {}, {}, {}
+
+        local function assemble_rows(screen, bg, fg, w, h)
+            local texta, fga, bga = _texta, _fga, _bga
+            local trow,  frow, brow = _trow, _frow, _brow
+            local idx = 0
+            for y = 1, h do
+                for x = 1, w do
+                    idx = idx + 1
+                    trow[x] = ch128[screen[idx]]
+                    frow[x] = blitColors[fg[idx]]
+                    brow[x] = blitColors[bg[idx]]
+                end
+                texta[y] = table.concat(trow, "", 1, w)
+                fga[y]   = table.concat(frow, "", 1, w)
+                bga[y]   = table.concat(brow, "", 1, w)
+            end
+            return texta, fga, bga
+        end
+
+        local function present(monLike, texta, fga, bga, h)
+            for y = 1, h do
+                monLike.setCursorPos(1, y + 1)
+                monLike.blit(texta[y], fga[y], bga[y])
+            end
+        end
+    
+        local function wait_for_frame(start_ms, fno, fps)
+            local deadline = start_ms + fno * 1000 / fps
+            while true do
+                local now = epoch("utc")
+                local remain = deadline - now
+                if remain <= 0 then return end
+                if remain > 100 then sleep(0) else
+                end
+            end
+        end
+        
+        local t = {}
+        t.start = os.epoch("utc")
+        t.running = false
+        t.loadNext = nil
+        
+        local src, file, subFileRaw
+
+        function t.onSoundStart()
+            t.start = os.epoch("utc")
+        end
+
+        function t.stopPlayback()
+            t.running = false
+        end
+
+        function t.load(path)
+            t.running = false
+            t.loadNext = path
+        end
+        
+        function t.doLoad(path)
+            src = assert(http_get(path))
+            file = ends_with(path, ".hqv") and src or inflate_stream(src, "gzip")
+            local subPath = string.gsub(string.gsub(path, ".dat", ".sub"), ".hqv", ".sub")
+            subFileRaw = http.get(subPath)
+            t.running = true
+        end
+        
+        function t.play()
+            local magic = file.read(4)
+            if magic ~= "32VD" then file.close(); error("Invalid magic header: " .. tostring(magic)) end
+            local width, height, fps, nstreams, flags = ("<HHBBH"):unpack(file.read(8))
+            if nstreams ~= 1 then file.close(); error("Separate files unsupported") end
+            local _, nframes, ctype = ("<IIB"):unpack(file.read(9))
+            if ctype ~= 0x0C then file.close(); error("Stream type not supported") end
+
+        
+            local vframe = 0
+            local subs = {}
+            if subFileRaw ~= nil then
+                local data = subFileRaw.readAll();
+                if data.sub(1, 1) ~= "{" then
+                    data = string.reverse(data)
+                end
+                local subIn = textutils.unserialize(data)
+                local function parse_time(t)
+                    local h, m, s = t:match("^(%d+):(%d+):(%d+%.%d+)$")
+                    if not h then error("Time format must be H:MM:SS.ff, got: " .. tostring(t)) end
+                    return tonumber(h) * 3600 + tonumber(m) * 60 + tonumber(s)
+                end
+                local function to_frame(sec) return floor(sec * fps + 0.5) end
+                for _, s in ipairs(subIn) do
+                    local startF = to_frame(parse_time(s.start))
+                    local endF = to_frame(parse_time(s["end"]))
+                    if endF <= startF then endF = startF + 1 end
+                    subs[#subs + 1] = { frame = startF, length = endF - startF, text = tostring(s.text or "") }
+                end
+            end
+        
+            local init, read
+            if band(flags, 3) == 1 then
+                local decodingTable, X, readbits, isColor
+                function init(c)
+                    isColor = c
+                    local R = file.read()
+                    local L = 2 ^ R
+                    local Ls = (function(sz)
+                    local retval = {}
+                    for i = 0, sz - 1, 2 do local b = file.read(); retval[i] = rshift(b, 4); retval[i + 1] = band(b, 15) end
+                    return retval
+                    end)(isColor and 24 or 32)
+                    if R == 0 then decodingTable = file.read(); X = nil; return end
+                    local a = 0
+                    for i = 0, #Ls do Ls[i] = Ls[i] == 0 and 0 or 2 ^ (Ls[i] - 1); a = a + Ls[i] end
+                    assert(a == L, a)
+                    decodingTable = { R = R }
+                    local x, step, nexts, symbol = 0, 0.625 * L + 3, {}, {}
+                    for i = 0, #Ls do
+                    nexts[i] = Ls[i]
+                    for _ = 1, Ls[i] do
+                        while symbol[x] do x = (x + 1) % L end
+                        x, symbol[x] = (x + step) % L, i
+                    end
+                    end
+                    for x0 = 0, L - 1 do
+                    local s = symbol[x0]
+                    local t = { s = s, n = R - log2(nexts[s]) }
+                    t.X, decodingTable[x0], nexts[s] = lshift(nexts[s], t.n) - L, t, 1 + nexts[s]
+                    end
+                    local partial, bits, pos = 0, 0, 1
+                    function readbits(n)
+                    if not n then n = bits % 8 end; if n == 0 then return 0 end
+                    while bits < n do pos, bits, partial = pos + 1, bits + 8, lshift(partial, 8) + file.read() end
+                    local retval = band(rshift(partial, bits - n), 2 ^ n - 1); bits = bits - n; return retval
+                    end
+                    X = readbits(R)
+                end
+                function read(nsym)
+                    local retval = {}
+                    if X == nil then for i = 1, nsym do retval[i] = decodingTable end; return retval end
+                    local i, last = 1, 0
+                    while i <= nsym do
+                    local t = decodingTable[X]
+                    if isColor and t.s >= 16 then
+                        local l = 2 ^ (t.s - 15)
+                        for n = 0, l - 1 do retval[i + n] = last end
+                        i = i + l
+                    else retval[i], last, i = t.s, t.s, i + 1 end
+                    X = t.X + readbits(t.n)
+                    end
+                    return retval
+                end
+            elseif band(flags, 3) == 0 then
+                local isColor, col_cache_bg, col_cache_fg, col_ready
+                function init(c) isColor, col_cache_bg, col_cache_fg, col_ready = c, nil, nil, false end
+            
+                local function read_bytes(n)
+                    if n <= 0 then return "" end
+                    local s = file.read(n)
+                    if not s or #s < n then
+                    return (s or "") .. string.rep("\0", n - (s and #s or 0))
+                    end
+                    return s
+                end
+            
+                function read(nsym)
+                    if isColor then
+                    if not col_ready then
+                        local bytes = read_bytes(nsym)
+                        local bg, fg = {}, {}
+                        for i = 1, nsym do
+                        local b = byte(bytes, i)
+                        bg[i] = rshift(b, 4); fg[i] = band(b, 0x0F)
+                        end
+                        col_cache_bg, col_cache_fg, col_ready = bg, fg, true
+                        return col_cache_bg
+                    else
+                        col_ready = false
+                        return col_cache_fg
+                    end
+                    end
+            
+                    local totalPacks = math.ceil(nsym / 8)
+                    local targetBytes = totalPacks * 5
+                    local bytes = read_bytes(targetBytes)
+            
+                    local out, buf, bits = {}, 0, 0
+                    for i = 1, targetBytes do
+                    local b = byte(bytes, i)
+                    buf  = bor(lshift(buf, 8), band(b, 0xFF))
+                    bits = bits + 8
+                    while bits >= 5 and #out < nsym do
+                        local shift = bits - 5
+                        out[#out + 1] = band(rshift(buf, shift), 0x1F)
+                        buf  = band(buf, lshift(1, shift) - 1)
+                        bits = shift
+                    end
+                    if #out >= nsym then break end
+                    end
+                    while #out < nsym do out[#out + 1] = 0 end
+                    return out
+                end
+            else
+                error("Unimplemented compression method!")
+            end
+        
+        
+            local function draw_palette(target)
+                for i = 0, 15 do
+                    local r = file.read() / 255
+                    local g = file.read() / 255
+                    local b = file.read() / 255
+                    target.setPaletteColor(pow2[i], r, g, b)
+                end
+            end
+        
+            local start = t.start
+            local lastyield = start
+        
+            local firstFrame = 1
+            local function drain_to_now()
+                local elapsed = epoch("utc") - start
+                local target  = math.floor((elapsed * fps) / 1000)
+
+                if vframe >= target then
+                    return
+                end
+
+                while vframe < target and firstFrame < nframes do
+                    if epoch("utc") - lastyield > 500 then sleep(0); lastyield = epoch("utc") end
+                    local size, ftype = ("<IB"):unpack(file.read(5))
+                    if size > 0 then file.read(size) end
+
+                    firstFrame = firstFrame + 1
+                    if ftype == 0 or ftype == 64 then
+                    vframe = vframe + 1
+                    end
+                end
+            end
+            drain_to_now()
+            
+            
+            for _ = firstFrame, nframes do
+                local size, ftype = ("<IB"):unpack(file.read(5))
+            
+                if ftype == 0 then
+                    if epoch("utc") - lastyield > 500 then sleep(0); lastyield = epoch("utc") end
+                    if not t.running then break end
+
+                    init(false)
+                    local screen = read(width * height)
+                    init(true)
+                    local bg = read(width * height)
+                    local fg = read(width * height)
+            
+                    wait_for_frame(start, vframe, fps)
+            
+                    local texta, fga, bga = assemble_rows(screen, bg, fg, width, height)
+                    draw_palette(term)
+                    present(term, texta, fga, bga, height)
+            
+                    local kill = {}
+                    for i, v in ipairs(subs) do
+                        if vframe >= v.frame and vframe <= v.frame + v.length then
+                            local w, h = term.getSize()
+                            local lines = wrapText(v.text, w)
+                            lines[#lines + 1] = ""
+                            term.setBackgroundColor(colors.bg)
+                            term.setTextColor(colors.fg)
+                            for j = 1, h do
+                                term.setCursorPos(1, j + height + 1);
+                                term.write((lines[j] or "  ") .. "                          ")
+                            end
+                        elseif vframe > v.frame + v.length then
+                            kill[#kill + 1] = i
+                            for j = 1, 6 do term.setCursorPos(1, j + height + 1); term.write("                          ") end
+                        end
+                    end
+                    for i2, v2 in ipairs(kill) do table.remove(subs, v2 - i2 + 1) end
+            
+                    vframe = vframe + 1
+                elseif ftype == 1 then
+                    file.read(size)
+                else
+                    file.close(); error("Unknown frame type " .. tostring(ftype))
+                end
+            end
+            t.stopPlayback()
+        end
+
+        function t.run()
+            while true do
+                if t.loadNext ~= nil then
+                    local path = t.loadNext
+                    t.loadNext = nil
+                    t.doLoad(path)
+                elseif not t.running then
+                    coroutine.yield()
+                elseif root:getState("current") ~= "" and root:getState("playing") then
+                    t.play()
+                else
+                    coroutine.yield()
+                end
+            end
+        end
+        return t
+    end
+    local videoPlayer = makeVideoPlayer()
+
+    inflate_stream = function(src, kind, in_chunk, out_max)
         local DEFLATE = require("deflate")
 
         kind     = kind or "raw"
@@ -599,7 +942,7 @@ function(require, repo)
         return t
     end
 
-    local function http_get(url)
+    http_get = function(url)
       local r = http.get(url, { Range = "bytes=0-0", ["Accept-Encoding"] = "identity" }, true) or error("404")
       local h = r.getResponseHeaders()
       local total = tonumber(h["Content-Range"]:match("/(%d+)$"))
@@ -607,6 +950,10 @@ function(require, repo)
       r.readAll(); r.close()
   
       local parts, got = {}, 0
+      local body
+      if http[url] then
+        body = http[url]
+      else
       while got < total do
         local first = got
         local last = min(got + 10 * 1024 * 1024 - 1, total - 1)
@@ -614,8 +961,9 @@ function(require, repo)
         parts[#parts + 1] = rr.readAll(); rr.close()
         got = last + 1
       end
-  
-      local body = concat(parts)
+      body = concat(parts)
+      http[url] = body
+      end
       local pos, open = 1, true
       local t = {}
       function t.readAll() if not open then return nil end; open = false; return body end
@@ -646,7 +994,7 @@ function(require, repo)
       return t
     end
     --
-
+    
     local dfpwm = require("cc.audio.dfpwm")
     local speakers = { peripheral.find("speaker") }
     if not peripheral.find("speaker") then error("No speaker(s) attached. Maybe this isn't a *noisy* pocket computer?") end
@@ -659,26 +1007,30 @@ function(require, repo)
     end
 
     local ui = require("/basalt")
-    colors.bg = colors.green
-    colors.fg = colors.pink
-    colors.btnbg = colors.orange
-    colors.btnfg = colors.blue
-    colors.accent = colors.lightBlue
-    colors.accentfg = colors.lime
+    colors.bg = colors.lightBlue -- 3
+    colors.fg = colors.pink -- 6
+    colors.btnbg = colors.orange -- 1
+    colors.btnfg = colors.blue -- 11
+    colors.accent = colors.green -- 13
+    colors.accentfg = colors.lime -- 5
 
-    for k,v in pairs({
-        [colors.bg]       = 0x0A0D14,
-        [colors.fg]       = 0xEDEBF2,
-        [colors.btnbg]    = 0x161B26,
-        [colors.btnfg]    = 0xEDEBF2,
-        [colors.accent]   = 0xC81D25,
-        [colors.accentfg] = 0xFFF5F5,
-    }) do
-        term.setPaletteColor(k, v)
+    local function restore_colors()
+        for k,v in pairs({
+            [colors.bg]       = 0x0A0D14,
+            [colors.fg]       = 0xEDEBF2,
+            [colors.btnbg]    = 0x161B26,
+            [colors.btnfg]    = 0xEDEBF2,
+            [colors.accent]   = 0xC81D25,
+            [colors.accentfg] = 0xFFF5F5,
+        }) do
+            term.setPaletteColor(k, v)
+        end
+
+        term.setBackgroundColor(colors.bg)
+        term.setTextColor(colors.fg)
     end
 
-    term.setBackgroundColor(colors.bg)
-    term.setTextColor(colors.fg)
+    restore_colors()
     term.clear()
 
     -- ===== Songs setup =====
@@ -686,11 +1038,15 @@ function(require, repo)
         return suffix == "" or str:sub(-#suffix) == suffix
     end
 
+    local video
     local stopFlag = false
-    local volume
-    local function dfpwm_player(songData)
+    local function dfpwm_player(songData, song)
         local decoder = dfpwm.make_decoder()
         local dataLen = #songData
+        if song.has_video and video.visible then
+            videoPlayer.load(song.has_video)
+        end
+        videoPlayer.onSoundStart()
         for i = 1, dataLen, 8*1024 do
             if stopFlag then break end
             local chunk = songData:sub(i, math.min(i+8*1024-1, dataLen))
@@ -699,7 +1055,7 @@ function(require, repo)
 
             for _, spk in pairs(speakers) do
                 if stopFlag then break end
-                if not spk.playAudio(buffer, volume:getValue() / 100) then
+                if not spk.playAudio(buffer, math.min(volume / 2, 0.5)) then
                     pending[peripheral.getName(spk)] = spk
                 end
             end
@@ -707,15 +1063,15 @@ function(require, repo)
             while not stopFlag and next(pending) do
                 local _, name = os.pullEvent("speaker_audio_empty")
                 local spk = pending[name]
-                if spk and spk.playAudio(buffer, volume:getValue() / 100) then
+                if spk and spk.playAudio(buffer, math.min(volume / 2, 0.5)) then
                     pending[name] = nil
                 end
             end
         end
     end
-    local function hqs_player(rawStream)
-        local READ_CHUNK = 128 * 1024
-        local PLAY_CHUNK = 64 * 1024
+    local function hqs_player(rawStream, song)
+        local READ_CHUNK = 64 * 1024
+        local PLAY_CHUNK = 48 * 1024
         local PAUSE_SEC = 0.05
     
         local function wrap_s8(x) return ((x + 128) % 256) - 128 end
@@ -735,6 +1091,7 @@ function(require, repo)
             out[out_len] = s
         end
     
+        local started = false
         local function flush_play_chunks(final)
             while (out_len >= PLAY_CHUNK) or (final and out_len > 0) do
                 local take = math.min(out_len, PLAY_CHUNK)
@@ -751,16 +1108,20 @@ function(require, repo)
                     out_len = 0
                 end
                 local pending = {}
+                if not started then
+                    videoPlayer.onSoundStart()
+                    started = true
+                end
                 for _, spk in pairs(speakers) do
                     if stopFlag then break end
-                    if not spk.playAudio(chunk_tbl, volume:getValue() / 100) then
+                    if not spk.playAudio(chunk_tbl, math.min(volume / 3 * 2, 0.66)) then
                         pending[peripheral.getName(spk)] = spk
                     end
                 end
                 while not stopFlag and next(pending) do
                     local _, name = os.pullEvent("speaker_audio_empty")
                     local spk = pending[name]
-                    if spk and spk.playAudio(chunk_tbl, volume:getValue() / 100) then
+                    if spk and spk.playAudio(chunk_tbl, math.min(volume / 3 * 2, 0.66)) then
                         pending[name] = nil
                     end
                 end
@@ -786,6 +1147,9 @@ function(require, repo)
             end
         end
     
+        if song.has_video and video.visible then
+            videoPlayer.load(song.has_video)
+        end
         while not stopFlag do
             local chunk = rawStream.read and rawStream.read(READ_CHUNK) or rawStream.readAll()
             if not chunk or #chunk == 0 then break end
@@ -823,22 +1187,25 @@ function(require, repo)
     
     local function make_rec(base, url, is_hqs)
         local buffer = nil
-        return {
+        local result;
+        result = {
             text = base,
             name = base,
             is_hqs = is_hqs,
+            has_video = false,
             play = function()
                 if is_hqs then
                     local zstream = inflate_stream(http_get(url), "gzip")
-                    hqs_player(zstream)
+                    hqs_player(zstream, result)
                 else
                     if buffer == nil then
                         buffer = http.get(url).readAll()
                     end
-                    dfpwm_player(buffer)
+                    dfpwm_player(buffer, result)
                 end
             end
         }
+        return result
     end
 
     for _, file in ipairs(songNames) do
@@ -856,14 +1223,32 @@ function(require, repo)
         end
     end
 
+    for _, file in ipairs(songNames) do
+        local name = file.name
+        local lname = name:lower()
+
+        if ends_with(lname, ".hqv") then
+            local base = name:gsub("%.hqv$", "")
+            if byBase[base] then
+                byBase[base].has_video = file.download_url
+            end
+        end
+    end
+
     local songs = {}
     for _, rec in pairs(byBase) do table.insert(songs, rec) end
     table.sort(songs, function(a, b) return a.text:lower() < b.text:lower() end)
+    
+    for _, song in ipairs(songs) do
+        if song.has_video then
+            song.text = "\164" .. song.text
+        end
+    end
 
     -- ===== Playback state =====
     local init = false
 
-    local root = ui.getMainFrame()
+    root = ui.getMainFrame()
         :initializeState("playing", false, true)
         :initializeState("shuffle", true, true)
         :initializeState("loop", 0, true) -- 0=Off,1=All,2=One
@@ -871,7 +1256,7 @@ function(require, repo)
         :initializeState("current", "", true)
         :initializeState("never", {}, true)
         :initializeState("queue", {}, true)
-
+    
     -- Main screen
     local menuHeight = 1
     local main = root:addFrame({
@@ -1007,12 +1392,12 @@ function(require, repo)
         end
         
         stopFlag = true
+        videoPlayer.stopPlayback()
         if init then
             root:setState("playing", true)
         end
         nowPlaying.text = text
-    end):setState("current", root:getState("current"))
-    :initializeState("volume", math.floor(root.width / 3) - 1, false)
+    end):initializeState("volume", math.floor(root.width / 3) - 1, true)
 
     main:addLabel({
         x = 1 + main.width - 1,
@@ -1095,32 +1480,42 @@ function(require, repo)
         end
     end)
     root:onStateChange("playing", function(self, newValue)
-        playing.text = newValue and " Play " or " Stop "
+        playing.text = newValue and "Playin" or " Stop "
         if not newValue then
            stopFlag = true
         end
+        videoPlayer.stopPlayback()
     end):setState("playing", root:getState("playing"))
 
+    local videoTab
     local function advanceToNext()
         local function anyPlayable()
-            for _, s in ipairs(songs) do if not s.neverPlay then return true end end
+            for _, s in ipairs(songs) do
+                if not s.neverPlay and (not video.visible or s.has_video) then
+                    return true
+                end
+            end
             return false
         end
-    
+
         local function indexOf(name)
-            for i, s in ipairs(songs) do if s.name == name then return i end end
+            for i, s in ipairs(songs) do
+                if s.name == name then return i end
+            end
             return nil
         end
-    
+
         local function pickRandomPlayable()
             local pool = {}
             for _, s in ipairs(songs) do
-                if not s.neverPlay then pool[#pool+1] = s end
+                if not s.neverPlay and (not video.visible or s.has_video) then
+                    pool[#pool+1] = s
+                end
             end
             if #pool == 0 then return nil end
             return pool[math.random(#pool)]
         end
-    
+
         local function nextSequentialPlayable(fromIdx, wrap)
             local n = #songs
             if n == 0 then return nil end
@@ -1133,8 +1528,9 @@ function(require, repo)
                     if not wrap then return nil end
                     i = 1
                 end
-                if not songs[i].neverPlay then
-                    return songs[i], i
+                local s = songs[i]
+                if not s.neverPlay and (not video.visible or s.has_video) then
+                    return s, i
                 end
                 steps = steps + 1
                 if wrap and i == start then break end
@@ -1162,11 +1558,26 @@ function(require, repo)
             root:setState("queue", queue)
         elseif loopMode == 2 then
             if currentSong ~= nil and not currentSong.neverPlay then
+                if video.visible and not currentSong.has_video then
+                    local s = nextSequentialPlayable(curIdx, true)
+                    if s then
+                        root:setState("current", s.name)
+                        root:setState("playing", true)
+                    else
+                        root:setState("current", "")
+                        root:setState("playing", false)
+                    end
+                end
                 return
             else
                 local s = nextSequentialPlayable(curIdx, true)
-                if s then root:setState("current", s.name); root:setState("playing", true)
-                else root:setState("current", ""); root:setState("playing", false) end
+                if s then
+                    root:setState("current", s.name)
+                    root:setState("playing", true)
+                else
+                    root:setState("current", "")
+                    root:setState("playing", false)
+                end
                 return
             end
         elseif doShuffle then
@@ -1203,6 +1614,7 @@ function(require, repo)
         
         advanceToNext()
         stopFlag = true
+        videoPlayer.stopPlayback()
         root:setState("playing", true)
     end)
     banQueueLabel.y = 2
@@ -1212,7 +1624,7 @@ function(require, repo)
         background = colors.bg,
         foreground = colors.fg,
     })
-    volume = buttons:addSlider({
+    local volumeSlider = buttons:addSlider({
         y = 3, x = 1 + volumeLabel.width,
         width = buttons.width - volumeLabel.width,
         foreground = colors.btnfg,
@@ -1222,14 +1634,28 @@ function(require, repo)
         backgroundEnabled = true
     }):bind("step", "volume")
     root:onStateChange("volume", function(self, newValue)
-        volumeLabel.text = "Vol: " .. volume:getValue() .. "%"
+        volumeLabel.text = "Vol: " .. volumeSlider:getValue() .. "%"
+        volume = volumeSlider:getValue() / 100
     end):setState("volume", root:getState("volume"))
 
     
+    -- Video Player
+    video = root:addFrame({
+        y = 1 + menuHeight,
+        width = root.width,
+        height = root.height - menuHeight,
+        visible = false,
+        background = colors.bg,
+        foreground = colors.fg,
+    })
+    
     function hideAll()
+        videoPlayer.stopPlayback()
         main.visible = false
+        video.visible = false
     end
-    local menu = root:addMenu({
+    local menu
+    menu = root:addMenu({
         background = colors.btnbg,
         foreground = colors.btnfg,
         selectedBackground = colors.accent,
@@ -1237,15 +1663,60 @@ function(require, repo)
         height = menuHeight,
         items = {
             {
-                text = "Zerg's Music Player",
+                text = "Zerg's Player",
                 selected = true,
                 callback = function()
                     hideAll()
+                    os.sleep(0.1)
+                    restore_colors()
                     main.visible = true
+                    menu.background = colors.btnbg
+                    menu.foreground = colors.btnfg
+                    menu.selectedBackground = colors.accent
+                    menu.selectedForeground = colors.accentfg
                 end
-            }},
+            },
+            {
+                text = " ",
+                separator = true
+            }
+        },
         width = root.width,
     })
+
+    videoTab = {
+        text = "Video",
+        selected = false,
+        callback = function()
+            hideAll()
+            video.visible = true
+            menu.background = colors.bg
+            menu.foreground = colors.fg
+            menu.selectedBackground = colors.fg
+            menu.selectedForeground = colors.bg
+
+            local song = songsList:getSelectedItem()
+            if song.has_video then
+                videoPlayer.load(song.has_video)
+            end
+        end
+    };
+    
+    root:onStateChange("current", function(self, newValue)
+        local current = songsList:getSelectedItem()
+        local desiredVisibility = current and current.has_video or false
+        if desiredVisibility and not videoTab.visible then
+            menu:addItem(videoTab)
+        elseif not desiredVisibility and videoTab.visible then
+            for i, item in ipairs(menu:getItems()) do
+                if item == videoTab then
+                    menu:removeItem(i)
+                    break
+                end
+            end
+        end
+        videoTab.visible = desiredVisibility
+    end):setState("current", root:getState("current"))
 
     init = true
     
@@ -1258,6 +1729,8 @@ function(require, repo)
                     advanceToNext()
                 else
                     currentSong.play()
+
+                    videoPlayer.stopPlayback()
     
                     if stopFlag then
                         stopFlag = false
@@ -1271,5 +1744,5 @@ function(require, repo)
         end
     end
 
-    parallel.waitForAny(playerLoop, ui.run)
+    parallel.waitForAny(playerLoop, videoPlayer.run, ui.run)
 end
