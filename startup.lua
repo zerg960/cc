@@ -38,7 +38,9 @@ function(require, repo)
                 name = name,
                 fn = function()
                     local url = "https://raw.githubusercontent.com/" .. repo .. "/refs/heads/main/" .. textutils.urlEncode(name):gsub("+", "%%20") .. ".dfpwm"
-                    return http.get(url).readAll()
+                    local r = http.get(url)
+                    if not r then error("Failed to fetch: " .. url) end
+                    return r.readAll()
                 end
             })
         end
@@ -265,27 +267,11 @@ function(require, repo)
         local print = _ENV.print
         _ENV.print = function() end
         setfenv(fn, _ENV)
-        fn()("-r")
+        fn()("-f")
         _ENV.print = print
     end
     installUiLibrary()
 
-    if package == nil then
-        -- update bootloader
-        local bootloader = fs.open("/startup.lua", "w")
-        bootloader.writeLine("--don't change this line; it's for automatic software updates")
-        bootloader.writeLine("local source = (http.get(\"https://github.com/zerg960/cc/raw/refs/heads/main/startup2.lua\") or http.get(\"https://github.com/zerg960/cc/raw/refs/heads/main/startup.lua\")).readAll()")
-        bootloader.writeLine("local fn = load(\"return \" .. source, \"code\", \"t\", _G)")
-        bootloader.writeLine("setfenv(fn, _ENV)")
-        bootloader.writeLine("")
-        bootloader.writeLine("--(optional) edit this to")
-        bootloader.writeLine("--set the default playlist")
-        bootloader.writeLine("--used by the first run")
-        bootloader.writeLine("fn()(require, \"" .. repo .. "\")")
-        bootloader.close()
-        old()
-        return
-    end
 
     -- compression stuff
     local function save(name, url)
@@ -636,7 +622,7 @@ function(require, repo)
                     t.doLoad(path)
                 elseif not t.running then
                     coroutine.yield()
-                elseif root:getState("current") ~= "" and root:getState("playing") then
+                elseif root:getStore("current") ~= "" and root:getStore("playing") then
                     t.play()
                 else
                     coroutine.yield()
@@ -1249,13 +1235,13 @@ function(require, repo)
     local init = false
 
     root = ui.getMainFrame()
-        :initializeState("playing", false, true)
-        :initializeState("shuffle", true, true)
-        :initializeState("loop", 0, true) -- 0=Off,1=All,2=One
-        :initializeState("offset", 0, true)
-        :initializeState("current", "", true)
-        :initializeState("never", {}, true)
-        :initializeState("queue", {}, true)
+        :initializeStore("playing", false, true)
+        :initializeStore("shuffle", true, true)
+        :initializeStore("loop", 0, true) -- 0=Off,1=All,2=One
+        :initializeStore("offset", 0, true)
+        :initializeStore("current", "", true)
+        :initializeStore("never", {}, true)
+        :initializeStore("queue", {}, true)
     
     -- Main screen
     local menuHeight = 1
@@ -1278,11 +1264,11 @@ function(require, repo)
 
     function updateBanQueueLabel()
         local excludedCt = 0
-        for _, _ in pairs(root:getState("never")) do
+        for _, _ in pairs(root:getStore("never")) do
             excludedCt = excludedCt + 1
         end
         
-        local queuedCt = #root:getState("queue")
+        local queuedCt = #root:getStore("queue")
 
         local text
         if queuedCt > 0 then
@@ -1303,17 +1289,17 @@ function(require, repo)
         selectedBackground = colors.accent,
         selectedForeground = colors.accentfg
     }):bind("offset")
-    root:onStateChange("never", function(self, newValue)
+    root:onStoreChange("never", function(self, newValue)
         for _, song in ipairs(songs) do
             song.neverPlay = newValue[song.name]
             song.foreground = song.neverPlay and colors.btnbg or nil
             song.selectedForeground = song.neverPlay and colors.btnbg or nil
         end
         updateBanQueueLabel()
-    end):setState("never", root:getState("never"))
-    root:onStateChange("queue", function(self, newValue)
+    end):setStore("never", root:getStore("never"))
+    root:onStoreChange("queue", function(self, newValue)
         updateBanQueueLabel()
-    end):setState("queue", root:getState("queue"))
+    end):setStore("queue", root:getStore("queue"))
 
     local contextMenu = main:addList({
         visible = false,
@@ -1322,16 +1308,16 @@ function(require, repo)
     })
     songsList:onSelect(function(self, index, item)
         if contextMenu.visible then
-            local selected = root:getState("current")
+            local selected = root:getStore("current")
             for _, song in ipairs(songs) do
                 song.selected = song.name == selected
             end
         else
-            root:setState("current", item.name)
+            root:setStore("current", item.name)
         end
     end)
     
-    root:onStateChange("offset", function()
+    root:onStoreChange("offset", function()
         contextMenu.visible = false
     end)
     root:onClick(function(self, button)
@@ -1350,21 +1336,21 @@ function(require, repo)
             {
                 text = " Add to Queue ",
                 callback = function()
-                    local queue = root:getState("queue")
+                    local queue = root:getStore("queue")
                     queue[#queue + 1] = song.name
-                    root:setState("queue", queue)
+                    root:setStore("queue", queue)
                 end
             },
             {
-                text = root:getState("never")[song.name] and " Include " or " Exclude ",
+                text = root:getStore("never")[song.name] and " Include " or " Exclude ",
                 callback = function()
-                    local never = root:getState("never")
+                    local never = root:getStore("never")
                     if never[song.name] then
                         never[song.name] = nil
                     else
                         never[song.name] = true
                     end
-                    root:setState("never", never)
+                    root:setStore("never", never)
                 end
             }
         }
@@ -1378,7 +1364,7 @@ function(require, repo)
         background = colors.bg,
         foreground = colors.fg,
     })
-    root:onStateChange("current", function(self, newValue)
+    root:onStoreChange("current", function(self, newValue)
         local old = songsList:getSelectedItem()
         if old ~= nil then
             old.selected = false
@@ -1394,10 +1380,10 @@ function(require, repo)
         stopFlag = true
         videoPlayer.stopPlayback()
         if init then
-            root:setState("playing", true)
+            root:setStore("playing", true)
         end
         nowPlaying.text = text
-    end):initializeState("volume", math.floor(root.width / 3) - 1, true)
+    end):initializeStore("volume", math.floor(root.width / 3) - 1, true)
 
     main:addLabel({
         x = 1 + main.width - 1,
@@ -1408,7 +1394,7 @@ function(require, repo)
         foreground = colors.fg,
         backgroundEnabled = true
     }):onClick(function()
-        root:setState("offset", math.max(0, songsList.offset - songsList.height))
+        root:setStore("offset", math.max(0, songsList.offset - songsList.height))
     end)
     
     main:addLabel({
@@ -1420,7 +1406,7 @@ function(require, repo)
         foreground = colors.fg,
         backgroundEnabled = true
     }):onClick(function()
-        root:setState("offset", math.min(#songs - songsList.height, songsList.offset + songsList.height))
+        root:setStore("offset", math.min(#songs - songsList.height, songsList.offset + songsList.height))
     end)
 
     main:addScrollBar({
@@ -1428,7 +1414,7 @@ function(require, repo)
         y = 2,
         height = songsList.height - 2,
         property = "offset",
-        value = root:getState("offset"),
+        value = root:getStore("offset"),
         background = colors.bg,
         foreground = colors.fg,
         symbol = "#",
@@ -1441,17 +1427,18 @@ function(require, repo)
         max = math.max(1, #songs - songsList.height),
      })
 
+
     local shuffle = buttons:addLabel({
         y = 1,
         foreground = colors.btnfg,
         background = colors.btnbg,
         backgroundEnabled = true
     }):onClick(function()
-        root:setState("shuffle", not root:getState("shuffle"))
+        root:setStore("shuffle", not root:getStore("shuffle"))
     end)
-    root:onStateChange("shuffle", function(self, newValue)
+    root:onStoreChange("shuffle", function(self, newValue)
         shuffle.text = " Shuffle: " .. (newValue and "On " or "Off") .. " "
-    end):setState("shuffle", root:getState("shuffle"))
+    end):setStore("shuffle", root:getStore("shuffle"))
 
     local loop = buttons:addLabel({
         y = 1, x = 1 + shuffle.width + 1,
@@ -1459,11 +1446,11 @@ function(require, repo)
         background = colors.btnbg,
         backgroundEnabled = true
     }):onClick(function()
-        root:setState("loop", (root:getState("loop") + 1) % 3)
+        root:setStore("loop", (root:getStore("loop") + 1) % 3)
     end)
-    root:onStateChange("loop", function(self, newValue)
+    root:onStoreChange("loop", function(self, newValue)
         loop.text = " Loop: " .. ({[0]="Off", [1]="All", [2]="One"})[newValue] .. " "
-    end):setState("loop", root:getState("loop"))
+    end):setStore("loop", root:getStore("loop"))
 
     local playing = buttons:addLabel({
         y = 2,
@@ -1471,21 +1458,21 @@ function(require, repo)
         background = colors.btnbg,
         backgroundEnabled = true
     }):onClick(function()
-        if root:getState("playing") then
-            root:setState("playing", false)
+        if root:getStore("playing") then
+            root:setStore("playing", false)
         else
-            if root:getState("current") ~= "" then
-                root:setState("playing", true)
+            if root:getStore("current") ~= "" then
+                root:setStore("playing", true)
             end
         end
     end)
-    root:onStateChange("playing", function(self, newValue)
+    root:onStoreChange("playing", function(self, newValue)
         playing.text = newValue and "Playin" or " Stop "
         if not newValue then
            stopFlag = true
         end
         videoPlayer.stopPlayback()
-    end):setState("playing", root:getState("playing"))
+    end):setStore("playing", root:getStore("playing"))
 
     local videoTab
     local function advanceToNext()
@@ -1539,63 +1526,63 @@ function(require, repo)
         end
 
         if not anyPlayable() then
-            root:setState("current", "")
-            root:setState("playing", false)
+            root:setStore("current", "")
+            root:setStore("playing", false)
             return
         end
 
         local currentSong = songsList:getSelectedItem()
-        local loopMode = root:getState("loop")
-        local doShuffle = root:getState("shuffle")
-        local curName = root:getState("current")
+        local loopMode = root:getStore("loop")
+        local doShuffle = root:getStore("shuffle")
+        local curName = root:getStore("current")
         local curIdx = indexOf(curName) or 0
-        local queue = root:getState("queue")
+        local queue = root:getStore("queue")
 
         if #queue > 0 then
             local s = table.remove(queue, 1)
-            root:setState("current", s)
-            root:setState("playing", true)
-            root:setState("queue", queue)
+            root:setStore("current", s)
+            root:setStore("playing", true)
+            root:setStore("queue", queue)
         elseif loopMode == 2 then
             if currentSong ~= nil and not currentSong.neverPlay then
                 if video.visible and not currentSong.has_video then
                     local s = nextSequentialPlayable(curIdx, true)
                     if s then
-                        root:setState("current", s.name)
-                        root:setState("playing", true)
+                        root:setStore("current", s.name)
+                        root:setStore("playing", true)
                     else
-                        root:setState("current", "")
-                        root:setState("playing", false)
+                        root:setStore("current", "")
+                        root:setStore("playing", false)
                     end
                 end
                 return
             else
                 local s = nextSequentialPlayable(curIdx, true)
                 if s then
-                    root:setState("current", s.name)
-                    root:setState("playing", true)
+                    root:setStore("current", s.name)
+                    root:setStore("playing", true)
                 else
-                    root:setState("current", "")
-                    root:setState("playing", false)
+                    root:setStore("current", "")
+                    root:setStore("playing", false)
                 end
                 return
             end
         elseif doShuffle then
             local s = pickRandomPlayable()
-            if s then root:setState("current", s.name); root:setState("playing", true) end
+            if s then root:setStore("current", s.name); root:setStore("playing", true) end
             return
         elseif loopMode == 1 then
             local s = nextSequentialPlayable(curIdx, true)
-            if s then root:setState("current", s.name); root:setState("playing", true) end
+            if s then root:setStore("current", s.name); root:setStore("playing", true) end
             return
         elseif loopMode == 0 then
             local s = nextSequentialPlayable(curIdx, false)
             if s then
-                root:setState("current", s.name)
-                root:setState("playing", true)
+                root:setStore("current", s.name)
+                root:setStore("playing", true)
             else
-                root:setState("current", "")
-                root:setState("playing", false)
+                root:setStore("current", "")
+                root:setStore("playing", false)
             end
             return
         end
@@ -1608,14 +1595,14 @@ function(require, repo)
         background = colors.btnbg,
         backgroundEnabled = true
     }):onClick(function()
-        if root:getState("current") == "" then
+        if root:getStore("current") == "" then
             return
         end
         
         advanceToNext()
         stopFlag = true
         videoPlayer.stopPlayback()
-        root:setState("playing", true)
+        root:setStore("playing", true)
     end)
     banQueueLabel.y = 2
 
@@ -1633,10 +1620,10 @@ function(require, repo)
         sliderColor = colors.accent,
         backgroundEnabled = true
     }):bind("step", "volume")
-    root:onStateChange("volume", function(self, newValue)
+    root:onStoreChange("volume", function(self, newValue)
         volumeLabel.text = "Vol: " .. volumeSlider:getValue() .. "%"
         volume = volumeSlider:getValue() / 100
-    end):setState("volume", root:getState("volume"))
+    end):setStore("volume", root:getStore("volume"))
 
     
     -- Video Player
@@ -1702,7 +1689,7 @@ function(require, repo)
         end
     };
     
-    root:onStateChange("current", function(self, newValue)
+    root:onStoreChange("current", function(self, newValue)
         local current = songsList:getSelectedItem()
         local desiredVisibility = current and current.has_video or false
         if desiredVisibility and not videoTab.visible then
@@ -1716,7 +1703,7 @@ function(require, repo)
             end
         end
         videoTab.visible = desiredVisibility
-    end):setState("current", root:getState("current"))
+    end):setStore("current", root:getStore("current"))
 
     init = true
     
@@ -1724,7 +1711,7 @@ function(require, repo)
 
         while true do
             local currentSong = songsList:getSelectedItem()
-            if root:getState("current") ~= "" and root:getState("playing") then
+            if root:getStore("current") ~= "" and root:getStore("playing") then
                 if currentSong.neverPlay then
                     advanceToNext()
                 else
